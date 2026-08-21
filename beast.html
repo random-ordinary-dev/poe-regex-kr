@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>야수사냥 정규식</title>
+<title>야수 도감 정규식</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
@@ -13,15 +13,15 @@
 <div class="wrap">
 <nav class="tabs">
   <a href="index.html">홈</a>
-  <a href="beast.html" class="on">야수사냥</a>
+  <a href="beast.html" class="on">야수 도감</a>
   <a href="scarab.html">갑충석</a>
   <a href="tattoo.html">문신</a>
   <a href="runegraft.html">룬 접목</a>
-  <a href="expedition.html">귀넨 도박</a>
+  <a href="expedition.html">그위넨 도박</a>
 </nav>
   <header class="site">
-    <h1>야수사냥 정규식</h1>
-    <span class="sub">아인하르 야수 우리에서 값비싼 야수만 골라내는 검색어 생성기</span>
+    <h1>야수 도감 정규식</h1>
+    <span class="sub">아인하르 야수관에서 값비싼 야수만 골라내는 검색어 생성기</span>
   </header>
   <p class="meta" id="meta">시세 불러오는 중…</p>
 
@@ -46,8 +46,8 @@
       </div>
     </div>
     <div class="checks">
-      <label><input type="checkbox" id="harvest"> 하베스트(원종) 야수 포함</label>
-      <label><input type="checkbox" id="menagerie"> 야수 우리 검색창 글자수 제한 사용 (100자)</label>
+      <label><input type="checkbox" id="harvest"> 수확 야수 포함</label>
+      <label><input type="checkbox" id="menagerie"> 야수관 검색창 글자수 제한 사용 (100자)</label>
       <label><input type="checkbox" id="redonly"> 붉은 야수만 표시</label>
     </div>
   </div>
@@ -62,7 +62,7 @@
   </div>
 
   <footer>
-    포함된 야수는 금색으로 표시됩니다. 생성된 정규식을 게임 내 야수도감·야수 우리 검색창에 붙여넣으면 됩니다.<br>
+    포함된 야수는 금색으로 표시됩니다. 생성된 정규식을 게임 내 야수 도감·야수관 검색창에 붙여넣으면 됩니다.<br>
     원본 도구: <a href="https://poe.re/beast">poe.re/beast</a> (veiset) · 시세: poe.ninja (economy.poe.re) · 야수 한국어 명칭: 한국 서비스 클라이언트 데이터 · 제작법 번역: <a href="https://poedb.tw/kr/">poedb.tw</a> 참조<br>
     정규식은 한국어 클라이언트 기준입니다. 영문 클라이언트에서는 원본 poe.re를 사용하세요.
   </footer>
@@ -128,7 +128,7 @@ function render(){
     const hiddenHarvest = !s.harvest && b.harvest;
     const cls = included && !hiddenHarvest ? "inc" : (hiddenHarvest ? "dim" : "");
     const tags = (b.red ? '<span class="tag red">붉은</span>' : '') +
-                 (b.harvest ? '<span class="tag harv">하베스트</span>' : '');
+                 (b.harvest ? '<span class="tag harv">수확</span>' : '');
     rows.push(`<tr class="${cls}">
       <td class="name"><span class="kr-name">${b.kr}</span>${tags}<br><span class="en-name">${b.en}</span></td>
       <td class="rgx">${b.regex}</td>
