@@ -1,0 +1,44 @@
+name: Update beast prices
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # 6시간마다
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch current league and prices
+        run: |
+          set -euo pipefail
+          leagues=$(curl -sf "https://league-fetcher.poe-re.workers.dev/leagues?game=poe1")
+          league=$(echo "$leagues" | python3 -c '
+          import json,sys
+          ls=[l["id"] for l in json.load(sys.stdin)["result"]]
+          picks=[l for l in ls if l not in ("Standard","Hardcore") and not l.startswith("Hardcore")]
+          print(picks[0] if picks else "Standard")')
+          echo "league=$league"
+          curl -sf "https://economy.poe.re/beast/eco_${league// /%20}_Beast.json" -o /tmp/eco.json
+          python3 - "$league" <<'PY'
+          import json,sys
+          league=sys.argv[1]
+          eco=json.load(open('/tmp/eco.json'))
+          slim={"lines":[{"name":l["name"],"chaosValue":l["chaosValue"],"listingCount":l["listingCount"]} for l in eco["lines"]]}
+          json.dump(slim,open('data/prices.json','w',encoding='utf-8'),ensure_ascii=False)
+          json.dump({"league":league},open('data/league.json','w'))
+          PY
+          curl -sf "https://economy.poe.re/generated.txt" -o data/updated.txt
+
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "chore: update beast prices"
+          git push
