@@ -89,10 +89,11 @@ function generate(){
   let acc = "", done = false;
   for(const b of pinned.concat(auto)){
     if(done) continue;
-    if(acc.length + b.regex.length + 1 > 250){ done = true; continue; }
+    if(acc.length + b.regex.length + 3 > 250){ done = true; continue; }
     acc += "|" + b.regex;
   }
-  return acc.substring(1);
+  const body = acc.substring(1);
+  return body === "" ? "" : '"' + body + '"';
 }
 
 function fmtChaos(v){ return v >= 100 ? Math.round(v).toLocaleString() : v.toLocaleString(); }
@@ -105,7 +106,7 @@ function render(){
   const c = $("count");
   c.textContent = result.length + "/250";
   c.classList.toggle("over", result.length > 250);
-  const parts = result === "" ? [] : result.split("|");
+  const parts = result === "" ? [] : result.replace(/^"|"$/g, "").split("|");
   $("rows").innerHTML = items.map((b,i) => {
     const m = st.manual[b.en];
     const included = parts.includes(b.regex);
