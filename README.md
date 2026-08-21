@@ -13,6 +13,7 @@
 | `tattoo.html` | 선조 문신 | 53 |
 | `runegraft.html` | 칼구르 룬 접목 | 31 |
 | `expedition.html` | 그위넨 도박 기물 | 401 |
+| `boat.html` | 항해 해도 속성 (올플레임) | 74 |
 
 ## 원본과 다른 점
 

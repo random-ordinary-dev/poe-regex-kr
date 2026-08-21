@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>항해 해도 정규식</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+.modlist{border:1px solid var(--line); border-radius:6px; background:var(--surface); overflow:hidden}
+.modgroup{padding:8px 14px; font-size:.76rem; letter-spacing:.1em; font-weight:700; color:var(--ink-dim); border-bottom:1px solid var(--line); background:var(--surface2)}
+.modrow{display:flex; gap:10px; padding:8px 14px; border-bottom:1px solid var(--line); cursor:pointer; align-items:baseline}
+.modrow:last-child{border-bottom:none}
+.modrow:hover{background:var(--surface2)}
+.modrow.sel{background:var(--hl); box-shadow:inset 3px 0 0 var(--gold)}
+.modtext{flex:1; font-size:.9rem}
+.modtag{font-size:.72rem; color:var(--violet); border:1px solid var(--violet); border-radius:9px; padding:0 7px; white-space:nowrap}
+.modrgx{font-family:"IBM Plex Mono","IBM Plex Sans KR",monospace; font-size:.8rem; color:var(--gold); white-space:nowrap}
+.arearow{display:flex; gap:9px; align-items:center; padding:4px 0; cursor:pointer; font-size:.9rem}
+.arearow input{accent-color:var(--gold); width:15px; height:15px}
+.area-en{color:var(--ink); font-weight:500}
+.area-desc{color:var(--ink-dim); font-size:.82rem}
+.seg{display:flex; gap:2px; border:1px solid var(--line); border-radius:5px; overflow:hidden; width:max-content}
+.seg button{border:none; border-radius:0; padding:5px 12px; font-size:.84rem; color:var(--ink-dim)}
+.seg button.on{background:var(--gold); color:var(--bg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="tabs">
+  <a href="index.html">홈</a>
+  <a href="beast.html">야수 도감</a>
+  <a href="scarab.html">갑충석</a>
+  <a href="tattoo.html">문신</a>
+  <a href="runegraft.html">룬 접목</a>
+  <a href="expedition.html">그위넨 도박</a>
+  <a href="boat.html" class="on">항해 해도</a>
+</nav>
+  <header class="site">
+    <h1>항해 해도 정규식</h1>
+    <span class="sub">원하는 항해 속성이 붙은 해도만 강조하는 검색어 생성기</span>
+  </header>
+  <p class="meta">해도 속성 74종 · 게임 데이터 패치 3.29 기준 · <a href="https://poe.re">poe.re</a>의 한국어판</p>
+
+  <div class="resultbox">
+    <div class="regex" id="out"></div>
+    <span class="count" id="count">0/250</span>
+    <span class="copied" id="copied">복사됨</span>
+    <button id="copy">복사</button>
+    <button class="ghost" id="reset">초기화</button>
+  </div>
+
+  <div class="panel">
+    <h2>설정</h2>
+    <div class="fields" style="align-items:center">
+      <div class="field">
+        <label>선택한 속성 일치 방식</label>
+        <div class="seg" id="matchmode">
+          <button data-v="any" class="on">하나라도</button>
+          <button data-v="all">모두</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>인접(연결) 속성 필터</label>
+        <div class="seg" id="adjmode">
+          <button data-v="off" class="on">사용 안 함</button>
+          <button data-v="in">인접 있는 해도만</button>
+          <button data-v="out">인접 없는 해도만</button>
+        </div>
+      </div>
+      <div class="field" style="flex:1; min-width:260px">
+        <label for="custom">직접 추가할 검색어 (쉼표로 구분, 특수 지역명 등)</label>
+        <input id="custom" type="text" style="width:100%" placeholder="예: 지역명, 원하는 문구">
+      </div>
+    </div>
+    <p class="hint">아래 목록에서 원하는 속성을 클릭해 선택하세요. 정규식은 보관함 검색창에 붙여넣으면 해당 해도가 강조됩니다.</p>
+  </div>
+
+  <div class="panel">
+    <h2>특수 지역 <span style="font-weight:400; letter-spacing:0; text-transform:none">— 한국어 명칭 확인 전이라 영문 표기입니다. 게임에서 보이는 한국어 지역명을 알려주시면 반영됩니다.</span></h2>
+    <div id="areas"></div>
+  </div>
+
+  <div class="modlist" id="mods"></div>
+
+  <footer>
+    선택한 속성은 금색으로 표시됩니다. "모두" 모드는 선택한 속성이 전부 있는 해도만, "하나라도"는 하나 이상 있는 해도를 강조합니다.<br>
+    원본 도구: <a href="https://poe.re">poe.re</a> (veiset) · 한국어 문구: 한국 서비스 클라이언트 데이터(패치 3.29) · 한국어 클라이언트 기준
+  </footer>
+</div>
+
+<script>
+const TOKENS = [{"lines": ["인접 지역들에 갇힌 몬스터 #마리 추가 등장"], "tags": [], "prefix": true, "regex": "갇힌", "scary": 1}, {"lines": ["인접 지역들 내 무리 규모 #% 증가"], "tags": [], "prefix": true, "regex": "인접 지역들 내 무리 규모", "scary": 1}, {"lines": ["인접 지역들에 문어 무리 #개 추가 등장"], "tags": [], "prefix": true, "regex": "문어", "scary": 1}, {"lines": ["몬스터가 #%의 추가 물리 피해를 화염 속성으로 가함", "인접 지역들에서 발견하는 아이템 희귀도 #% 증가"], "tags": ["물리", "원소", "피해", "화염"], "prefix": true, "regex": "화염", "scary": 1}, {"lines": ["몬스터의 생명력 #% 증폭", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["생명력"], "prefix": true, "regex": "몬스터의 생명력", "scary": 1}, {"lines": ["인접 지역들에서 떨어지는 허리띠가 #% 확률로 고유 허리띠로 떨어짐"], "tags": [], "prefix": true, "regex": "띠가", "scary": 1}, {"lines": ["해도를 기록하면 항해 속성이 드러남"], "tags": [], "prefix": true, "regex": "기록", "scary": 1}, {"lines": ["몬스터 피해 #% 증가", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": ["피해"], "prefix": true, "regex": "몬스터 피해", "scary": 1}, {"lines": ["인접 지역 내 몬스터가 떨어뜨리는 장비의 #%가 골드로 전환"], "tags": [], "prefix": true, "regex": "%가", "scary": 1}, {"lines": ["인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": true, "regex": "인접 지역들에서 발견하는 ", "scary": 1}, {"lines": ["몬스터의 원소 저항 +#%", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["원소", "저항", "카오스"], "prefix": true, "regex": "몬스터의 원소 저항 +", "scary": 1}, {"lines": ["몬스터가 #%의 추가 물리 피해를 냉기 속성으로 가함", "인접 지역들에서 발견하는 아이템 희귀도 #% 증가"], "tags": ["냉기", "물리", "원소", "피해"], "prefix": true, "regex": "냉기", "scary": 1}, {"lines": ["몬스터가 #%의 추가 물리 피해를 번개 속성으로 가함", "인접 지역들에서 발견하는 아이템 희귀도 #% 증가"], "tags": ["물리", "번개", "원소", "피해"], "prefix": true, "regex": "번개", "scary": 1}, {"lines": ["인접 지역들에서 떨어지는 목걸이가 #% 확률로 고유 목걸이로 떨어짐"], "tags": [], "prefix": true, "regex": "걸이", "scary": 1}, {"lines": ["인접 지역들에 [GoldenLanterns|황금 등불] #개 추가 등장"], "tags": [], "prefix": true, "regex": "Go", "scary": 1}, {"lines": ["몬스터의 물리 피해 감소 +#%", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["물리"], "prefix": true, "regex": "소 +", "scary": 1}, {"lines": ["인접 지역들에 금고 #개 추가 등장"], "tags": [], "prefix": true, "regex": "에 금", "scary": 1}, {"lines": ["인접 지역들에서 발견하는 아이템 희귀도 #% 증가"], "tags": [], "prefix": true, "regex": "인접 지역들에서 발견하는 ", "scary": 1}, {"lines": ["몬스터의 생명력 #% 증폭", "몬스터 기절 면역", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["생명력"], "prefix": true, "regex": "기절", "scary": 1}, {"lines": ["인접 지역들에 통 무더기 #개 추가 등장"], "tags": [], "prefix": true, "regex": "더기", "scary": 1}, {"lines": ["인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": [], "prefix": true, "regex": "인접 지역들에서 발견하는 ", "scary": 1}, {"lines": ["인접 지역들에서 떨어지는 반지가 #% 확률로 고유 반지로 떨어짐"], "tags": [], "prefix": true, "regex": "반지", "scary": 1}, {"lines": ["인접 지역들에 신비학자의 금고 #개 추가 등장"], "tags": [], "prefix": true, "regex": "비학", "scary": 1}, {"lines": ["몬스터가 최대 생명력의 #%를 추가 에너지 보호막 최대치로 획득", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": [], "prefix": true, "regex": "너지", "scary": 1}, {"lines": ["모든 항해 지역 내 플레이어들이 [SoulEater|영혼 포식자] 획득"], "tags": [], "prefix": true, "regex": "Ea", "scary": 1}, {"lines": ["몬스터에게 걸리는 저주 효과 #% 증폭", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["시전자", "저주"], "prefix": true, "regex": "걸리", "scary": 1}, {"lines": ["몬스터 도발 면역", "몬스터의 동작 속도가 기본 수치 밑으로 내려가지 않음", "몬스터의 이동 속도가 기본 수치 밑으로 내려가지 않음", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["속도"], "prefix": true, "regex": "가지", "scary": 1}, {"lines": ["지역에 살가운 해파리 등장"], "tags": [], "prefix": true, "regex": "가운", "scary": 1}, {"lines": ["인접 지역에 게 무리 #개 추가 등장"], "tags": [], "prefix": true, "regex": "게 무", "scary": 1}, {"lines": ["몬스터가 #%의 확률로 중독, 꿰뚫기, 출혈 회피", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["공격", "물리", "상태 이상", "카오스"], "prefix": true, "regex": "기,", "scary": 1}, {"lines": ["몬스터의 스킬 #회 추가 연쇄", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": true, "regex": "스킬", "scary": 1}, {"lines": ["인접 지역들 내 희귀 몬스터 수 #% 증가"], "tags": [], "prefix": true, "regex": "귀 몬스터 ", "scary": 46}, {"lines": ["인접 지역들에 예언자의 금고 #개 추가 등장"], "tags": [], "prefix": true, "regex": "언자", "scary": 46}, {"lines": ["인접 지역들 내 마법 몬스터 수 #% 증가"], "tags": [], "prefix": true, "regex": "내 마", "scary": 46}, {"lines": ["인접 지역들 내 희귀 몬스터가 #%의 확률로 사로잡힘"], "tags": [], "prefix": true, "regex": "로잡", "scary": 46}, {"lines": ["인접 지역들에 고통받는 혼백의 창살 #개 추가 등장"], "tags": [], "prefix": true, "regex": "고통", "scary": 46}, {"lines": ["인접 지역들에 에 거대 불가사리 #마리 추가 등장"], "tags": [], "prefix": true, "regex": "가사", "scary": 46}, {"lines": ["몬스터가 물리 피해의 #%를 추가 카오스 피해로 획득", "몬스터가 명중 시 #%의 확률로 2초 동안 위축 유발", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": true, "regex": "2초", "scary": 68}, {"lines": ["몬스터가 사술 방지 보유", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": ["시전자", "저주"], "prefix": true, "regex": "방지", "scary": 68}, {"lines": ["모든 항해 지역 내 자연적으로 서식하는 희귀 몬스터가 에센스에 갇힘"], "tags": [], "prefix": true, "regex": "갇힘", "scary": 68}, {"lines": ["몬스터의 카오스 저항 +#%", "몬스터의 원소 저항 +#%", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["원소", "저항", "카오스"], "prefix": true, "regex": "스 저", "scary": 68}, {"lines": ["몬스터의 주문 피해 억제 확률 #%", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": [], "prefix": true, "regex": "억제", "scary": 68}, {"lines": ["몬스터가 투사체 #개 추가 발사", "인접 지역들 내 무리 규모 #% 증가"], "tags": [], "prefix": true, "regex": "발사", "scary": 68}, {"lines": ["인접 지역들에 병 안의 서신 #개 추가 등장"], "tags": [], "prefix": true, "regex": "서신", "scary": 68}, {"lines": ["인접 지역들 내 몬스터가 마법 이상으로 등장"], "tags": [], "prefix": true, "regex": "상으", "scary": 68}, {"lines": ["모든 항해 지역에서 발견하는 플라스크가 #%의 확률로 20% 퀄리티로 떨어짐"], "tags": [], "prefix": true, "regex": "0%", "scary": 68}, {"lines": ["몬스터의 이동 속도 #% 증가", "몬스터의 공격 속도 #% 증가", "몬스터의 시전 속도 #% 증가", "인접 지역들 내 무리 규모 #% 증가"], "tags": ["공격", "속도", "시전자"], "prefix": true, "regex": "시전", "scary": 68}, {"lines": ["인접 지역들에서 떨어지는 아이템이 #% 확률로 분열된 등급"], "tags": [], "prefix": true, "regex": "등급", "scary": 68}, {"lines": ["몬스터가 장비, 플라스크, 팅크를 떨어뜨리지 않음"], "tags": [], "prefix": true, "regex": "리지", "scary": 68}, {"lines": ["인접 지역들 내 희귀 몬스터가 판테온 속성 1개 보유"], "tags": [], "prefix": true, "regex": "1개", "scary": 68}, {"lines": ["앗지리의 영향"], "tags": [], "prefix": true, "regex": "리의", "scary": 68}, {"lines": ["인접 지역들에 첩보원의 금고 #개 추가 등장"], "tags": [], "prefix": true, "regex": "보원", "scary": 68}, {"lines": ["항해 내 희귀 몬스터가 사망 시 #% 확률로 [MonsterFracture|분열]"], "tags": [], "prefix": true, "regex": "Fr", "scary": 68}, {"lines": ["몬스터가 일정 확률로 야생림 도깨비불 #마리로 강화"], "tags": [], "prefix": true, "regex": "강화", "scary": 68}, {"lines": ["인접 지역들에 매우 귀한 특이한 물고기 등장"], "tags": [], "prefix": true, "regex": "고기", "scary": 68}, {"lines": ["지역에 #%만큼 피해가 증가한 감전 지대 존재", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "%만", "scary": 1}, {"lines": ["지역에 얼음 지대 존재", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "얼음", "scary": 1}, {"lines": ["몬스터가 #%의 확률로 원소 상태 이상 긴급회피", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["냉기", "번개", "상태 이상", "원소", "화염"], "prefix": false, "regex": "급회", "scary": 1}, {"lines": ["몬스터가 명중 시 인내 충전 획득", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "시 인", "scary": 1}, {"lines": ["몬스터가 명중 시 실명 유발", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": false, "regex": "실명", "scary": 1}, {"lines": ["몬스터가 공격 명중 시 힘줄 절단 유발", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": false, "regex": "절단", "scary": 1}, {"lines": ["몬스터가 명중 시 격분 충전 획득", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "시 격", "scary": 1}, {"lines": ["몬스터가 명중 시 권능 충전 획득", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "시 권능 ", "scary": 1}, {"lines": ["몬스터의 주문 명중 시 이동 방해 유발", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": false, "regex": "방해", "scary": 1}, {"lines": ["몬스터의 효과 범위 #% 증가", "인접 지역들 내 무리 규모 #% 증가"], "tags": [], "prefix": false, "regex": "범위", "scary": 68}, {"lines": ["몬스터의 치명타 확률 #% 증가", "몬스터의 치명타 피해 배율 #%", "인접 지역들 내 무리 규모 #% 증가"], "tags": ["치명타", "피해"], "prefix": false, "regex": "배율", "scary": 68}, {"lines": ["플레이어의 모든 저항 최대치 #%", "인접 지역들 내 무리 규모 #% 증가"], "tags": [], "prefix": false, "regex": "어의", "scary": 68}, {"lines": ["몬스터가 명중 시 권능, 격분, 인내 충전 강탈", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": [], "prefix": false, "regex": "강탈", "scary": 68}, {"lines": ["몬스터가 치명타로 받는 추가 피해 #% 감소", "인접 지역들에서 발견하는 아이템 수량 #% 증가"], "tags": ["치명타", "피해"], "prefix": false, "regex": "타로", "scary": 68}, {"lines": ["몬스터가 명중 시 #%의 확률로 인내 충전 획득", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "로 인", "scary": 68}, {"lines": ["몬스터가 명중 시 #%의 확률로 권능 충전 획득", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "로 권", "scary": 68}, {"lines": ["몬스터가 명중 시 #%의 확률로 격분 충전 획득", "이 지역에서 발견하는 골드 #% 증가"], "tags": [], "prefix": false, "regex": "로 격", "scary": 68}, {"lines": ["몬스터 피해가 #%의 원소 저항 관통", "인접 지역들 내 무리 규모 #% 증가"], "tags": ["원소", "피해"], "prefix": false, "regex": "관통", "scary": 68}, {"lines": ["몬스터의 공격 명중 시 중독", "인접 지역들에서 발견하는 망자의 유황 #% 증가"], "tags": ["상태 이상", "카오스"], "prefix": false, "regex": "시 중", "scary": 68}];
+const AREAS = [["Diving Shoals", "트라텐 용병 조우(전용)"], ["Pelagic Abyss", "심연 구덩이 — 메릭의 두캇 드랍 가능"], ["Sea Pillars", "기둥마다 희귀 몬스터 1"], ["Sunken Totems", "선조들의 심판 보스 혼령"], ["Brine King's Domain", "염수왕 판테온 속성 희귀 몬스터"], ["Clam-Infested Shelf", "보물 조개 다수"], ["Kishara's Rest", "항해 중 벨카 전투"], ["Lost Ruins", "바알 그릇 등장"], ["Anchorfield", "가라앉은 전리품"], ["Infested Bathyspheres", "무작위 보상(전리품·금)"], ["Eldritch Depths", "위험한 몬스터"]];
+const LS_KEY = "poekr-boat";
+const $ = (id) => document.getElementById(id);
+const defaults = {sel:[], match:"any", adj:"off", areas:[], custom:""};
+let st = loadSettings();
+
+function loadSettings(){
+  try{ return {...defaults, ...JSON.parse(localStorage.getItem(LS_KEY) || "{}")}; }
+  catch(e){ return {...defaults}; }
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(st)); }catch(e){} }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function quoted(t){ return '"' + t + '"'; }
+function generate(){
+  const toks = st.sel.map(i => TOKENS[i]).filter(Boolean).map(t => t.regex);
+  const customs = st.custom.split(",").map(s => s.trim()).filter(Boolean);
+  const areaTerms = st.areas.map(i => AREAS[i] ? AREAS[i][0] : null).filter(Boolean);
+  const parts = [];
+  if(st.match === "any"){
+    const group = [...toks, ...areaTerms, ...customs];
+    if(group.length) parts.push(quoted(group.join("|")));
+  }else{
+    for(const t of toks) parts.push(t.includes(" ") ? quoted(t) : t);
+    const group = [...areaTerms, ...customs];
+    if(group.length) parts.push(quoted(group.join("|")));
+  }
+  if(st.adj === "in") parts.push(quoted("인접"));
+  if(st.adj === "out") parts.push(quoted("!인접"));
+  return parts.join(" ");
+}
+
+function render(){
+  save();
+  const result = generate();
+  $("out").textContent = result;
+  const c = $("count");
+  c.textContent = result.length + "/250";
+  c.classList.toggle("over", result.length > 250);
+  document.querySelectorAll("#matchmode button").forEach(b => b.classList.toggle("on", b.dataset.v === st.match));
+  document.querySelectorAll("#adjmode button").forEach(b => b.classList.toggle("on", b.dataset.v === st.adj));
+  document.querySelectorAll(".modrow").forEach(r => r.classList.toggle("sel", st.sel.includes(Number(r.dataset.i))));
+  document.querySelectorAll(".arearow input").forEach((cb,i) => cb.checked = st.areas.includes(i));
+}
+
+function build(){
+  let html = "", lastGroup = "";
+  TOKENS.forEach((t,i) => {
+    const g = t.prefix ? "접두어 (보상 위주)" : "접미어 (위험 위주)";
+    if(g !== lastGroup){ html += `<div class="modgroup">${g}</div>`; lastGroup = g; }
+    const tags = t.tags.map(x => `<span class="modtag">${esc(x)}</span>`).join(" ");
+    html += `<div class="modrow" data-i="${i}">
+      <div class="modtext">${t.lines.map(esc).join("<br>")}</div>
+      ${tags}<span class="modrgx">${esc(t.regex)}</span>
+    </div>`;
+  });
+  $("mods").innerHTML = html;
+  $("areas").innerHTML = AREAS.map((a,i) => `
+    <label class="arearow"><input type="checkbox" data-i="${i}">
+      <span class="area-en">${esc(a[0])}</span><span class="area-desc">${esc(a[1])}</span>
+    </label>`).join("");
+}
+
+build();
+$("custom").value = st.custom;
+$("mods").addEventListener("click", e => {
+  const r = e.target.closest(".modrow"); if(!r) return;
+  const i = Number(r.dataset.i);
+  st.sel = st.sel.includes(i) ? st.sel.filter(x => x !== i) : [...st.sel, i];
+  render();
+});
+$("areas").addEventListener("change", e => {
+  const i = Number(e.target.dataset.i);
+  st.areas = e.target.checked ? [...st.areas, i] : st.areas.filter(x => x !== i);
+  render();
+});
+$("matchmode").addEventListener("click", e => { if(e.target.dataset.v){ st.match = e.target.dataset.v; render(); } });
+$("adjmode").addEventListener("click", e => { if(e.target.dataset.v){ st.adj = e.target.dataset.v; render(); } });
+$("custom").addEventListener("input", e => { st.custom = e.target.value; render(); });
+$("copy").addEventListener("click", () => {
+  navigator.clipboard.writeText($("out").textContent).then(() => {
+    $("copied").classList.add("show");
+    setTimeout(() => $("copied").classList.remove("show"), 1400);
+  });
+});
+$("reset").addEventListener("click", () => { st = {...defaults, sel:[], areas:[]}; $("custom").value = ""; render(); });
+render();
+</script>
+</body>
+</html>
