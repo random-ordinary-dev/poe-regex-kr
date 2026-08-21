@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문신 정규식</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="tabs">
+  <a href="index.html">홈</a>
+  <a href="beast.html">야수사냥</a>
+  <a href="scarab.html">갑충석</a>
+  <a href="tattoo.html" class="on">문신</a>
+  <a href="runegraft.html">룬 접목</a>
+</nav>
+  <header class="site">
+    <h1>문신 정규식</h1>
+    <span class="sub">선조 문신 중 값비싼 것만 강조하는 검색어 생성기</span>
+  </header>
+  <p class="meta" id="meta">시세 불러오는 중…</p>
+
+  <div class="resultbox">
+    <div class="regex" id="out"></div>
+    <span class="count" id="count">0/250</span>
+    <span class="copied" id="copied">복사됨</span>
+    <button id="copy">복사</button>
+    <button class="ghost" id="reset">초기화</button>
+  </div>
+
+  <div class="panel">
+    <h2>설정</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="min">최소 카오스 가치</label>
+        <input id="min" type="text" inputmode="numeric" placeholder="예: 10">
+      </div>
+      <div class="field">
+        <label for="max">최대 카오스 가치</label>
+        <input id="max" type="text" inputmode="numeric" placeholder="비워두면 제한 없음">
+      </div>
+    </div>
+    <p class="hint">행을 클릭하면 가격과 무관하게 <b>포함</b> → <b>제외</b> → 자동 순으로 고정할 수 있습니다.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>이름</th><th>정규식</th><th class="num">카오스</th><th>효과</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    포함된 항목은 금색으로 표시됩니다. 생성된 정규식을 게임 내 보관함 검색창에 붙여넣으면 해당 아이템이 강조됩니다.<br>
+    문신을 모아 둔 탭에서 사용하는 것을 권장합니다.<br>
+    원본 도구: <a href="https://poe.re">poe.re</a> (veiset) · 시세: poe.ninja (economy.poe.re) · 한국어 명칭: 한국 서비스 클라이언트 데이터 · 효과 번역: <a href="https://poedb.tw/kr/">poedb.tw</a> 참조 · 한국어 클라이언트 기준
+  </footer>
+</div>
+
+<script>
+const DATA = [{"en": "Journey Tattoo of the Soul", "kr": "영혼의 여정 문신", "regex": "영", "desc": "할당된 영혼의 여정 문신 하나당 최대 에너지 보호막 +40", "chaos": 107.2}, {"en": "Tattoo of the Arohongui Warmonger", "kr": "아로호누이 전쟁광의 문신", "regex": "이 전쟁", "desc": "5%의 확률로 동결 유발", "chaos": 20.33}, {"en": "Tattoo of the Arohongui Warrior", "kr": "아로호누이 전사의 문신", "regex": "누이 전사", "desc": "냉기 피해 5% 증가", "chaos": 20.8}, {"en": "Tattoo of the Hinekora Deathwarden", "kr": "히네코라 죽음의 간수의 문신", "regex": "음", "desc": "플레이어에게 적용되는 저주 효과 6% 감소", "chaos": 0.5436}, {"en": "Tattoo of the Hinekora Storyteller", "kr": "히네코라 이야기꾼의 문신", "regex": "야", "desc": "카오스 저항 +3%", "chaos": 4.56}, {"en": "Tattoo of the Hinekora Warmonger", "kr": "히네코라 전쟁광의 문신", "regex": "라 전쟁", "desc": "소환수의 최대 생명력 5% 증가", "chaos": 1.45}, {"en": "Tattoo of the Kitava Heart Eater", "kr": "키타바 심장 포식자의 문신", "regex": "식", "desc": "최후의 일격이 4%의 확률로 시체를 소모해 최대 생명력의 10% 회복", "chaos": 1.42}, {"en": "Tattoo of the Kitava Rebel", "kr": "키타바 반란자의 문신", "regex": "란", "desc": "10%의 확률로 출혈 긴급회피", "chaos": 1.71}, {"en": "Tattoo of the Kitava Warrior", "kr": "키타바 전사의 문신", "regex": "바 전", "desc": "물리 피해 5% 증가", "chaos": 4.64}, {"en": "Tattoo of the Ngamahu Shaman", "kr": "나마후 주술사의 문신", "regex": "후 주", "desc": "플레이어에게 적용되는 점화 지속시간 10% 감소", "chaos": 7.53}, {"en": "Tattoo of the Ngamahu Warmonger", "kr": "나마후 전쟁광의 문신", "regex": "후 전쟁", "desc": "5%의 확률로 점화 유발", "chaos": 46.18}, {"en": "Tattoo of the Ngamahu Warrior", "kr": "나마후 전사의 문신", "regex": "후 전사", "desc": "화염 피해 5% 증가", "chaos": 7.89}, {"en": "Tattoo of the Ramako Archer", "kr": "라마코 궁수의 문신", "regex": "궁", "desc": "정확도 5% 증가", "chaos": 8.29}, {"en": "Tattoo of the Ramako Fleetfoot", "kr": "라마코 쾌속병의 문신", "regex": "속", "desc": "이동 속도 2% 증가", "chaos": 58.06}, {"en": "Tattoo of the Ramako Scout", "kr": "라마코 정찰병의 문신", "regex": "마코 정", "desc": "회피 6% 증가", "chaos": 5.48}, {"en": "Tattoo of the Ramako Sniper", "kr": "라마코 저격수의 문신", "regex": "저", "desc": "투사체 속도 5% 증가", "chaos": 7.66}, {"en": "Tattoo of the Rongokurai Brute", "kr": "롱고쿠라이 돌격병의 문신", "regex": "돌", "desc": "기절 한계치 10% 증가", "chaos": 0.1449}, {"en": "Tattoo of the Rongokurai Guard", "kr": "롱고쿠라이 수호병의 문신", "regex": "수호", "desc": "수호 스킬의 지속시간 6% 증가", "chaos": 0.95}, {"en": "Tattoo of the Rongokurai Turtle", "kr": "롱고쿠라이 거북이의 문신", "regex": "거", "desc": "치명타로 받는 추가 피해 5% 감소", "chaos": 9.43}, {"en": "Tattoo of the Rongokurai Warrior", "kr": "롱고쿠라이 전사의 문신", "regex": "라이 전", "desc": "방어도 6% 증가", "chaos": 2.11}, {"en": "Tattoo of the Tasalio Bladedancer", "kr": "타살리오 검의 무희의 문신", "regex": "검", "desc": "공격 명중 시 5%의 확률로 힘줄 절단", "chaos": 0.2473}, {"en": "Tattoo of the Tasalio Scout", "kr": "타살리오 정찰병의 문신", "regex": "오 정", "desc": "플레이어의 징표 효과 4% 증가", "chaos": 4.33}, {"en": "Tattoo of the Tasalio Tideshifter", "kr": "타살리오 파도변화술사의 문신", "regex": "도", "desc": "10%의 확률로 기절 긴급회피", "chaos": 1.72}, {"en": "Tattoo of the Tasalio Warrior", "kr": "타살리오 전사의 문신", "regex": "오 전", "desc": "공격 명중 시 5%의 확률로 적 실명 유발", "chaos": 1.8}, {"en": "Tattoo of the Tawhoa Herbalist", "kr": "타호아 약초상의 문신", "regex": "상", "desc": "플라스크 효과 지속시간 4% 증가", "chaos": 4.01}, {"en": "Tattoo of the Tawhoa Scout", "kr": "타호아 정찰병의 문신", "regex": "아 정", "desc": "10%의 확률로 중독 긴급회피", "chaos": 0.75}, {"en": "Tattoo of the Tawhoa Shaman", "kr": "타호아 주술사의 문신", "regex": "아 주", "desc": "명중 시 5%의 확률로 중독 유발", "chaos": 3.51}, {"en": "Tattoo of the Tukohama Shaman", "kr": "투코하마 주술사의 문신", "regex": "마 주", "desc": "1초마다 생명력의 0.3% 재생", "chaos": 7.31}, {"en": "Tattoo of the Tukohama Warrior", "kr": "투코하마 전사의 문신", "regex": "마 전사", "desc": "근접 명중으로 기절 유발 시 5%의 확률로 방어 상승", "chaos": 0.557}, {"en": "Tattoo of the Valako Scout", "kr": "발라코 정찰병의 문신", "regex": "라코 정", "desc": "플레이어에게 적용되는 감전 효과 10% 감소", "chaos": 16.43}, {"en": "Tattoo of the Valako Shaman", "kr": "발라코 주술사의 문신", "regex": "라코 주", "desc": "5%의 확률로 감전 유발", "chaos": 15.3}, {"en": "Tattoo of the Valako Shieldbearer", "kr": "발라코 방패 운반자의 문신", "regex": "방", "desc": "공격 피해 막기 확률 +1%", "chaos": 479.5}, {"en": "Tattoo of the Valako Stormrider", "kr": "발라코 태풍의 기수의 문신", "regex": "태", "desc": "번개 저항 +6%", "chaos": 16.3}, {"en": "Tattoo of the Valako Warrior", "kr": "발라코 전사의 문신", "regex": "코 전", "desc": "번개 피해 5% 증가", "chaos": 15.86}, {"en": "Journey Tattoo of the Mind", "kr": "정신의 여정 문신", "regex": "정신", "desc": "할당된 정신의 여정 문신 하나당 최대 마나 +30", "chaos": 1600}, {"en": "Journey Tattoo of the Body", "kr": "육신의 여정 문신", "regex": "육", "desc": "할당된 육신의 여정 문신 하나당 최대 생명력 +25", "chaos": 248.1}, {"en": "Tattoo of the Arohongui Moonwarden", "kr": "아로호누이 달의 간수의 문신", "regex": "달", "desc": "냉기 저항 +6%", "chaos": 21.16}, {"en": "Tattoo of the Arohongui Scout", "kr": "아로호누이 정찰병의 문신", "regex": "이 정", "desc": "10%의 확률로 냉각 긴급회피 / 10%의 확률로 동결 긴급회피", "chaos": 20.76}, {"en": "Tattoo of the Arohongui Shaman", "kr": "아로호누이 주술사의 문신", "regex": "이 주", "desc": "플레이어에게 적용되는 전령 버프 효과 5% 증가", "chaos": 523.5}, {"en": "Tattoo of the Hinekora Shaman", "kr": "히네코라 주술사의 문신", "regex": "라 주", "desc": "마나 재생 속도 8% 증가", "chaos": 0.6833}, {"en": "Tattoo of the Hinekora Warrior", "kr": "히네코라 전사의 문신", "regex": "라 전사", "desc": "에너지 보호막 최대치 3% 증가", "chaos": 10.12}, {"en": "Tattoo of the Kitava Blood Drinker", "kr": "키타바 피 흡수자의 문신", "regex": "피", "desc": "공격 피해의 0.5%를 생명력으로 흡수", "chaos": 1.09}, {"en": "Tattoo of the Kitava Shaman", "kr": "키타바 주술사의 문신", "regex": "바 주", "desc": "공격 시 5%의 확률로 출혈 유발", "chaos": 1.87}, {"en": "Tattoo of the Ngamahu Firewalker", "kr": "나마후 화염보행자의 문신", "regex": "보", "desc": "화염 저항 +6%", "chaos": 69.26}, {"en": "Tattoo of the Ngamahu Woodcarver", "kr": "나마후 목각사의 문신", "regex": "각", "desc": "토템 생명력 5% 증가", "chaos": 8.44}, {"en": "Tattoo of the Ramako Shaman", "kr": "라마코 주술사의 문신", "regex": "마코 주", "desc": "주문 피해 억제 확률 +2%", "chaos": 113.5}, {"en": "Tattoo of the Tasalio Shaman", "kr": "타살리오 주술사의 문신", "regex": "오 주", "desc": "주문 명중 시 5%의 확률로 적 이동 방해", "chaos": 0.15}, {"en": "Tattoo of the Tawhoa Naturalist", "kr": "타호아 박물학자의 문신", "regex": "물", "desc": "플라스크로 회복하는 생명력 8% 증가", "chaos": 1.78}, {"en": "Tattoo of the Tawhoa Warrior", "kr": "타호아 전사의 문신", "regex": "아 전", "desc": "카오스 피해 5% 증가", "chaos": 0.7695}, {"en": "Tattoo of the Tukohama Brawler", "kr": "투코하마 싸움꾼의 문신", "regex": "싸", "desc": "명중 시 10%의 확률로 적을 밀어냄", "chaos": 1.14}, {"en": "Tattoo of the Tukohama Warcaller", "kr": "투코하마 전쟁 소집자의 문신", "regex": "소", "desc": "함성 재사용 대기시간 회복 속도 8% 증가", "chaos": 8.37}, {"en": "Tattoo of the Tukohama Warmonger", "kr": "투코하마 전쟁광의 문신", "regex": "마 전쟁광", "desc": "근접 피해 5% 증가", "chaos": 5.59}, {"en": "Tattoo of the Rongokurai Goliath", "kr": "롱고쿠라이 골리앗의 문신", "regex": "골", "desc": "적에게 적용되는 기절 지속시간 10% 증가", "chaos": 0.5}];
+const CAT = "Tattoo";
+const ECONOMY = "https://economy.poe.re";
+const LS_KEY = "poekr-tattoo";
+const $ = (id) => document.getElementById(id);
+const defaults = {min:"10", max:"", manual:{}};
+let st = loadSettings();
+let items = [];
+
+function loadSettings(){
+  try{ return {...defaults, ...JSON.parse(localStorage.getItem(LS_KEY) || "{}")}; }
+  catch(e){ return {...defaults}; }
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(st)); }catch(e){} }
+
+function generate(){
+  const minV = st.min === "" ? 0 : Number(st.min);
+  const maxV = st.max === "" ? Infinity : Number(st.max);
+  const pinned = items.filter(b => st.manual[b.en] === "in");
+  const auto = items.filter(b => st.manual[b.en] === undefined && b.chaos >= minV && b.chaos <= maxV && b.chaos > 0);
+  let acc = "", done = false;
+  for(const b of pinned.concat(auto)){
+    if(done) continue;
+    if(acc.length + b.regex.length + 1 > 250){ done = true; continue; }
+    acc += "|" + b.regex;
+  }
+  return acc.substring(1);
+}
+
+function fmtChaos(v){ return v >= 100 ? Math.round(v).toLocaleString() : v.toLocaleString(); }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function render(){
+  save();
+  const result = generate();
+  $("out").textContent = result;
+  const c = $("count");
+  c.textContent = result.length + "/250";
+  c.classList.toggle("over", result.length > 250);
+  const parts = result === "" ? [] : result.split("|");
+  $("rows").innerHTML = items.map((b,i) => {
+    const m = st.manual[b.en];
+    const included = parts.includes(b.regex);
+    const cls = (included ? "inc" : "") + (m === "out" ? " dim" : "") + " click";
+    const tag = m === "in" ? '<span class="tag pin">포함 고정</span>' : m === "out" ? '<span class="tag ban">제외</span>' : "";
+    return `<tr class="${cls}" data-i="${i}">
+      <td class="name"><span class="kr-name">${esc(b.kr)}</span>${tag}<br><span class="en-name">${esc(b.en)}</span></td>
+      <td class="rgx">${esc(b.regex)}</td>
+      <td class="chaos">${b.chaos > 0 ? fmtChaos(b.chaos) : "—"}</td>
+      <td class="recipe">${esc(b.desc)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function fmtKst(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString("ko-KR", {timeZone:"Asia/Seoul", month:"long", day:"numeric", hour:"2-digit", minute:"2-digit"}) + " KST";
+}
+async function fetchJson(url){
+  const r = await fetch(url, {cache:"no-cache"});
+  if(!r.ok) throw new Error(url + " -> " + r.status);
+  return r.json();
+}
+
+async function load(){
+  let league = "Standard";
+  try{ league = (await fetchJson("data/league.json")).league; }catch(e){}
+  let eco = null, updated = "", source = "";
+  try{
+    eco = await fetchJson(`${ECONOMY}/tattoo/eco_${encodeURIComponent(league)}_Tattoo.json`);
+    try{ const r = await fetch(`${ECONOMY}/generated.txt`, {cache:"no-cache"}); if(r.ok) updated = await r.text(); }catch(e){}
+    source = "실시간";
+  }catch(e){
+    try{
+      eco = await fetchJson("data/prices_Tattoo.json");
+      try{ updated = await (await fetch("data/updated.txt")).text(); }catch(e2){}
+      source = "저장된 스냅숏";
+    }catch(e2){}
+  }
+  if(eco){
+    const byId = new Map(eco.items.map(it => [it.id, it.name]));
+    const price = new Map();
+    for(const l of eco.lines){ const n = byId.get(l.id); if(n) price.set(n, l.primaryValue ?? 0); }
+    items = DATA.map(d => ({...d, chaos: price.get(d.en) ?? d.chaos ?? 0}));
+    $("meta").innerHTML = `<b>${esc(league)}</b> 리그 poe.ninja 시세(${source}) · 갱신 ${esc(fmtKst(updated.trim()))} · <a href="https://poe.re">poe.re</a>의 한국어판`;
+  }else{
+    items = DATA.slice();
+    $("meta").textContent = "시세를 불러오지 못해 내장 스냅숏으로 표시합니다.";
+  }
+  items.sort((a,b) => b.chaos - a.chaos);
+  render();
+}
+
+$("min").value = st.min; $("max").value = st.max;
+$("min").addEventListener("input", e => { st.min = e.target.value.trim(); render(); });
+$("max").addEventListener("input", e => { st.max = e.target.value.trim(); render(); });
+$("rows").addEventListener("click", e => {
+  const tr = e.target.closest("tr[data-i]");
+  if(!tr) return;
+  const b = items[Number(tr.dataset.i)];
+  const cur = st.manual[b.en];
+  if(cur === undefined) st.manual[b.en] = "in";
+  else if(cur === "in") st.manual[b.en] = "out";
+  else delete st.manual[b.en];
+  render();
+});
+$("copy").addEventListener("click", () => {
+  navigator.clipboard.writeText($("out").textContent).then(() => {
+    $("copied").classList.add("show");
+    setTimeout(() => $("copied").classList.remove("show"), 1400);
+  });
+});
+$("reset").addEventListener("click", () => { st = {...defaults, manual:{}}; $("min").value = st.min; $("max").value = st.max; render(); });
+load();
+</script>
+</body>
+</html>

@@ -3,305 +3,38 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>야수사냥 정규식</title>
+<title>유배자 정규식</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
-<style>
-:root{
-  --bg:#17140f; --surface:#211c15; --surface2:#2a241a; --line:#3a3226;
-  --ink:#e8ddc4; --ink-dim:#a89a7c; --ink-faint:#6f6350;
-  --gold:#d4b06a; --gold-deep:#a8873f;
-  --crimson:#d4675a; --crimson-dim:#8a4038;
-  --violet:#a98fd6; --green:#8fae6b;
-  --hl:#2e2717; --hl-line:#57492a;
-  --focus:#e0c079;
-}
-@media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){
-    --bg:#f4eedf; --surface:#fbf7ec; --surface2:#efe7d3; --line:#d8cdb2;
-    --ink:#2b2417; --ink-dim:#6f6350; --ink-faint:#9c8f75;
-    --gold:#8a6a2f; --gold-deep:#6f541f;
-    --crimson:#a53d31; --crimson-dim:#c78379;
-    --violet:#6a4fa3; --green:#5c7a3a;
-    --hl:#f1e5c2; --hl-line:#cdb271;
-    --focus:#8a6a2f;
-  }
-}
-:root[data-theme="light"]{
-  --bg:#f4eedf; --surface:#fbf7ec; --surface2:#efe7d3; --line:#d8cdb2;
-  --ink:#2b2417; --ink-dim:#6f6350; --ink-faint:#9c8f75;
-  --gold:#8a6a2f; --gold-deep:#6f541f;
-  --crimson:#a53d31; --crimson-dim:#c78379;
-  --violet:#6a4fa3; --green:#5c7a3a;
-  --hl:#f1e5c2; --hl-line:#cdb271;
-  --focus:#8a6a2f;
-}
-*{box-sizing:border-box}
-body{
-  margin:0; background:var(--bg); color:var(--ink);
-  font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-  font-size:15px; line-height:1.55;
-}
-.wrap{max-width:1040px; margin:0 auto; padding:28px 20px 72px}
-header.site{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:6px}
-h1{
-  font-family:"Noto Serif KR",serif; font-weight:700; font-size:1.9rem; margin:0;
-  color:var(--gold); letter-spacing:.02em; text-wrap:balance;
-}
-.sub{color:var(--ink-dim); font-size:.92rem}
-.meta{color:var(--ink-faint); font-size:.85rem; margin:2px 0 20px}
-.meta b{color:var(--ink-dim); font-weight:500}
-.meta a{color:inherit}
-
-.resultbox{
-  background:var(--surface); border:1px solid var(--line); border-radius:6px;
-  padding:14px 16px; display:flex; gap:12px; align-items:center; margin-bottom:18px;
-}
-.regex{
-  flex:1; font-family:"IBM Plex Mono","IBM Plex Sans KR",monospace; font-size:.95rem;
-  color:var(--ink); word-break:break-all; min-height:1.4em; user-select:all;
-}
-.regex:empty::before{content:"조건에 맞는 야수가 없습니다"; color:var(--ink-faint)}
-.count{font-family:"IBM Plex Mono",monospace; font-size:.8rem; color:var(--ink-faint); white-space:nowrap; font-variant-numeric:tabular-nums}
-.count.over{color:var(--crimson); font-weight:600}
-button{
-  font-family:inherit; font-size:.88rem; cursor:pointer; border-radius:5px;
-  border:1px solid var(--gold-deep); background:transparent; color:var(--gold);
-  padding:7px 14px; transition:background .15s,color .15s;
-}
-button:hover{background:var(--gold); color:var(--bg); border-color:var(--gold)}
-button:focus-visible,input:focus-visible{outline:2px solid var(--focus); outline-offset:2px}
-button.ghost{border-color:var(--line); color:var(--ink-dim)}
-button.ghost:hover{background:var(--surface2); color:var(--ink); border-color:var(--ink-faint)}
-
-.panel{
-  background:var(--surface); border:1px solid var(--line); border-radius:6px;
-  padding:16px 18px; margin-bottom:22px;
-}
-.panel h2{
-  margin:0 0 12px; font-size:.8rem; font-weight:700; letter-spacing:.12em;
-  color:var(--ink-dim); text-transform:uppercase;
-}
-.fields{display:flex; gap:24px; flex-wrap:wrap; margin-bottom:12px}
-.field{display:flex; flex-direction:column; gap:5px}
-.field label{font-size:.85rem; color:var(--ink-dim)}
-.field input{
-  width:150px; background:var(--bg); border:1px solid var(--line); border-radius:5px;
-  color:var(--ink); padding:7px 10px; font-family:"IBM Plex Mono",monospace; font-size:.9rem;
-}
-.checks{display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--line); padding-top:12px}
-.checks label{display:flex; gap:9px; align-items:center; cursor:pointer; font-size:.92rem}
-.checks input{accent-color:var(--gold); width:16px; height:16px}
-
-.tablewrap{overflow-x:auto; border:1px solid var(--line); border-radius:6px; background:var(--surface)}
-table{border-collapse:collapse; width:100%; min-width:760px}
-th{
-  text-align:left; font-size:.76rem; letter-spacing:.1em; color:var(--ink-dim);
-  font-weight:700; padding:10px 14px; border-bottom:1px solid var(--line);
-  position:sticky; top:0; background:var(--surface);
-}
-th.num{text-align:right}
-td{padding:9px 14px; border-bottom:1px solid var(--line); vertical-align:top}
-tr:last-child td{border-bottom:none}
-td.name{white-space:nowrap}
-.kr-name{font-weight:500}
-.en-name{color:var(--ink-faint); font-size:.8rem}
-td.rgx{font-family:"IBM Plex Mono","IBM Plex Sans KR",monospace; font-size:.85rem; color:var(--gold); white-space:nowrap}
-td.chaos{text-align:right; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap}
-td.recipe{color:var(--ink-dim); font-size:.86rem; max-width:420px}
-tr.inc{background:var(--hl); box-shadow:inset 3px 0 0 var(--gold)}
-tr.dim{opacity:.38}
-.tag{
-  display:inline-block; font-size:.7rem; padding:1px 7px; border-radius:9px;
-  border:1px solid; margin-left:6px; vertical-align:1px;
-}
-.tag.red{color:var(--crimson); border-color:var(--crimson-dim)}
-.tag.harv{color:var(--violet); border-color:var(--violet)}
-footer{margin-top:26px; color:var(--ink-faint); font-size:.8rem; line-height:1.7}
-footer a{color:var(--ink-dim)}
-.copied{color:var(--green); font-size:.85rem; opacity:0; transition:opacity .3s}
-.copied.show{opacity:1}
-@media (prefers-reduced-motion: reduce){ *{transition:none !important} }
-</style>
+<link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 <div class="wrap">
+<nav class="tabs">
+  <a href="index.html" class="on">홈</a>
+  <a href="beast.html">야수사냥</a>
+  <a href="scarab.html">갑충석</a>
+  <a href="tattoo.html">문신</a>
+  <a href="runegraft.html">룬 접목</a>
+</nav>
   <header class="site">
-    <h1>야수사냥 정규식</h1>
-    <span class="sub">아인하르 야수 우리에서 값비싼 야수만 골라내는 검색어 생성기</span>
+    <h1>유배자 정규식</h1>
+    <span class="sub">Path of Exile 한국어 클라이언트용 검색 정규식 생성기</span>
   </header>
-  <p class="meta" id="meta">시세 불러오는 중…</p>
-
-  <div class="resultbox">
-    <div class="regex" id="out"></div>
-    <span class="count" id="count">0/250</span>
-    <span class="copied" id="copied">복사됨</span>
-    <button id="copy">복사</button>
-    <button class="ghost" id="reset">초기화</button>
+  <p class="meta"><a href="https://poe.re">poe.re</a>에서 영감을 받은 독자 구현 한국어판 · 시세는 poe.ninja 기준 자동 갱신</p>
+  <div class="cards">
+    <a class="card" href="beast.html"><h3>야수사냥</h3><p>아인하르 야수 우리에서 값비싼 야수 강조</p></a>
+    <a class="card" href="scarab.html"><h3>갑충석</h3><p>보관함에서 값비싼 갑충석 강조</p></a>
+    <a class="card" href="tattoo.html"><h3>문신</h3><p>값비싼 선조 문신 강조</p></a>
+    <a class="card" href="runegraft.html"><h3>룬 접목</h3><p>값비싼 칼구르 룬 접목 강조</p></a>
+    <div class="card"><h3>귀넨 도박</h3><p>탐험 도박 기물 강조</p><p class="soon">준비 중</p></div>
+    <div class="card"><h3>지도·상점 검색</h3><p>지도 속성, 상점 연결 검색 등</p><p class="soon">준비 중</p></div>
   </div>
-
-  <div class="panel">
-    <h2>설정</h2>
-    <div class="fields">
-      <div class="field">
-        <label for="min">최소 카오스 가치</label>
-        <input id="min" type="text" inputmode="numeric" placeholder="예: 10">
-      </div>
-      <div class="field">
-        <label for="max">최대 카오스 가치</label>
-        <input id="max" type="text" inputmode="numeric" placeholder="비워두면 제한 없음">
-      </div>
-    </div>
-    <div class="checks">
-      <label><input type="checkbox" id="harvest"> 하베스트(원종) 야수 포함</label>
-      <label><input type="checkbox" id="menagerie"> 야수 우리 검색창 글자수 제한 사용 (100자)</label>
-      <label><input type="checkbox" id="redonly"> 붉은 야수만 표시</label>
-    </div>
-  </div>
-
-  <div class="tablewrap">
-    <table>
-      <thead>
-        <tr><th>야수</th><th>정규식</th><th class="num">카오스</th><th>제작법</th></tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </div>
-
   <footer>
-    포함된 야수는 금색으로 표시됩니다. 생성된 정규식을 게임 내 야수도감·야수 우리 검색창에 붙여넣으면 됩니다.<br>
-    원본 도구: <a href="https://poe.re/beast">poe.re/beast</a> (veiset) · 시세: poe.ninja (economy.poe.re) · 야수 한국어 명칭: 한국 서비스 클라이언트 데이터 · 제작법 번역: <a href="https://poedb.tw/kr/">poedb.tw</a> 참조<br>
-    정규식은 한국어 클라이언트 기준입니다. 영문 클라이언트에서는 원본 poe.re를 사용하세요.
+    모든 정규식은 한국어 클라이언트 텍스트 기준으로 자체 계산됩니다. 영문 클라이언트에서는 원본 <a href="https://poe.re">poe.re</a>를 사용하세요.<br>
+    원본 도구: poe.re (veiset) · 시세: poe.ninja (economy.poe.re) · 한국어 명칭: 한국 서비스 클라이언트 데이터 · 번역 참조: <a href="https://poedb.tw/kr/">poedb.tw</a>
   </footer>
 </div>
-
-<script>
-const META = [{"en": "Black Mórrigan", "kr": "검은 모리건", "regex": "건", "recipeKr": "아이템에 위상 스킬 부여: 30레벨 고양이의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 새의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 거미의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 게의 위상 스킬<br>히네코라의 머리카락 적용: 마법 아이템으로<br>속성 2개 분열: 속성이 6개 이상인 희귀 부적 대상<br>아이템 속성 부여: 연결부 개수가 최대가 되도록<br>아이템 속성 부여: 홈 개수가 최대가 되도록<br>고유 아이템 생성: 부적", "harvest": false, "red": true}, {"en": "Craiceann, First of the Deep", "kr": "심해의 최초, 크라칸", "regex": "심해", "recipeKr": "아이템에 위상 스킬 부여: 게의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 게의 위상 스킬", "harvest": false, "red": true}, {"en": "Craicic Croaker", "kr": "크라칸 물렁이", "regex": "칸 ", "recipeKr": "각인본 생성: 마법 아이템<br>히네코라의 머리카락 적용: 마법 아이템으로", "harvest": false, "red": true}, {"en": "Craicic Maw", "kr": "크라칸의 큰턱개구리", "regex": "의 큰", "recipeKr": "아이템 속성 부여 개조: 쉐이퍼 아이템에 속성 부여 추가<br>아이템 속성 부여 개조: 엘더 아이템에 속성 부여 추가<br>아이템 속성 부여 개조: 대속자 아이템에 속성 부여 추가<br>아이템 속성 부여 개조: 사냥꾼 아이템에 속성 부여 추가<br>아이템 속성 부여 개조: 십자군 아이템에 속성 부여 추가<br>아이템 속성 부여 개조: 전쟁군주 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Craicic Sand Spitter", "kr": "크라칸의 모래 전갈", "regex": "의 모", "recipeKr": "화폐 아이템 생성: 연결의 오브<br>화폐 아이템 생성: 속박의 오브 2개 중첩<br>아이템 속성 부여: 연결부 개수가 최대가 되도록", "harvest": false, "red": true}, {"en": "Craicic Savage Crab", "kr": "크라칸의 사나운 게", "regex": "의 사", "recipeKr": "고유 아이템 생성: 아이템<br>아이템 속성 부여 개조: 희귀 지도에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Craicic Shield Crab", "kr": "크라칸의 방패게", "regex": "방패", "recipeKr": "화폐 아이템 생성: 쥬얼러 오브 4개 중첩<br>화폐 아이템 생성: 속박의 오브 2개 중첩<br>아이템 속성 부여: 홈 개수가 최대가 되도록", "harvest": false, "red": true}, {"en": "Craicic Spider Crab", "kr": "크라칸의 거미게", "regex": "미게", "recipeKr": "포탈 열기: 크라칸의 만", "harvest": false, "red": true}, {"en": "Craicic Squid", "kr": "크라칸의 오징어", "regex": "징", "recipeKr": "아이템 1개 변화시킴: 부적 기본 유형 무작위 변경", "harvest": false, "red": true}, {"en": "Craicic Vassal", "kr": "크라칸의 봉신", "regex": "칸의 봉", "recipeKr": "지도 타락: 고정 속성을 갖도록<br>지도 타락: 2회", "harvest": false, "red": true}, {"en": "Craicic Watcher", "kr": "크라칸의 감시자", "regex": "의 감", "recipeKr": "고유 아이템 생성: 클로 / 단검<br>아이템 속성 부여 개조: 사냥꾼 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Farric Ape", "kr": "페룰 유인원", "regex": "룰 유", "recipeKr": "고유 아이템 생성: 허리띠", "harvest": false, "red": true}, {"en": "Farric Chieftain", "kr": "페룰 부족장", "regex": "룰 부", "recipeKr": "고유 아이템 생성: 목걸이", "harvest": false, "red": true}, {"en": "Farric Flame Hellion Alpha", "kr": "페룰 화염 헬리온 우두머리", "regex": " 화", "recipeKr": "고유 아이템 생성: 반지", "harvest": false, "red": true}, {"en": "Farric Frost Hellion Alpha", "kr": "페룰 서리 헬리온 우두머리", "regex": "서", "recipeKr": "속성 1개 분열: 속성이 4개 이상인 희귀 부적 대상<br>화폐 아이템 생성: 취소의 오브 3개 중첩", "harvest": false, "red": true}, {"en": "Farric Gargantuan", "kr": "페룰 가르강튀아", "regex": "르", "recipeKr": "고유 아이템 생성: 투구<br>화폐 아이템 생성: 취소의 오브 3개 중첩", "harvest": false, "red": true}, {"en": "Farric Goatman", "kr": "페룰 염소인간", "regex": " 염", "recipeKr": "고유 아이템 생성: 플라스크", "harvest": false, "red": true}, {"en": "Farric Goliath", "kr": "페룰의 골리앗", "regex": "의 골", "recipeKr": "고유 아이템 생성: 활<br>아이템 속성 부여 개조: 십자군 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Farric Lynx Alpha", "kr": "페룰 스라소니 우두머리", "regex": "니 ", "recipeKr": "아이템 속성 부여 개조: 접미어 추가, 무작위 접두어 제거", "harvest": false, "red": true}, {"en": "Farric Magma Hound", "kr": "페룰 마그마 사냥개", "regex": "그", "recipeKr": "아이템 생성: 23% 퀄리티 타락 젬", "harvest": false, "red": true}, {"en": "Farric Pit Hound", "kr": "페룰 구덩이 사냥개", "regex": "덩", "recipeKr": "아이템 생성: 21레벨 타락 젬", "harvest": false, "red": true}, {"en": "Farric Taurus", "kr": "페룰 황소자리", "regex": "룰 황", "recipeKr": "고유 아이템 생성: 지도", "harvest": false, "red": true}, {"en": "Farric Tiger Alpha", "kr": "페룰 호랑이 우두머리", "regex": "랑", "recipeKr": "포탈 열기: 페룰의 굴", "harvest": false, "red": true}, {"en": "Farric Ursa", "kr": "페룰 곰", "regex": "룰 곰", "recipeKr": "고유 아이템 생성: 갑옷", "harvest": false, "red": true}, {"en": "Farric Wolf Alpha", "kr": "페룰의 늑대 우두머리", "regex": "대 우", "recipeKr": "아이템 속성 부여 개조: 접두어 추가, 무작위 접미어 제거", "harvest": false, "red": true}, {"en": "Farrul, First of the Plains", "kr": "평야의 최초, 페룰", "regex": "평", "recipeKr": "아이템에 위상 스킬 부여: 고양이의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 고양이의 위상 스킬", "harvest": false, "red": true}, {"en": "Fenumal Devourer", "kr": "페누무스 포식자", "regex": "스 포", "recipeKr": "고유 아이템 생성: 방패 / 화살통<br>아이템 속성 부여 개조: 쉐이퍼 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Fenumal Hybrid Arachnid", "kr": "페누무스 잡종 거미류", "regex": " 잡", "recipeKr": "포탈 열기: 페누무스의 소굴", "harvest": false, "red": true}, {"en": "Fenumal Plagued Arachnid", "kr": "페누무스 역병 걸린 거미류", "regex": " 역", "recipeKr": "각인본 생성: 희귀 부적<br>속성 2개 분열: 속성이 6개 이상인 희귀 부적 대상", "harvest": false, "red": true}, {"en": "Fenumal Queen", "kr": "페누무스 여왕", "regex": "스 여", "recipeKr": "고유 아이템 생성: 지팡이<br>아이템 속성 부여 개조: 대속자 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Fenumal Scorpion", "kr": "페누무스 전갈", "regex": "스 전", "recipeKr": "고유 아이템 전환: 다른 무작위 고유 아이템으로<br>지도 타락: 2회", "harvest": false, "red": true}, {"en": "Fenumal Scrabbler", "kr": "페누무스 넝마주이", "regex": "스 넝", "recipeKr": "고유 아이템 생성: 마법봉<br>아이템 속성 부여 개조: 전쟁군주 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Fenumal Widow", "kr": "페누무스 과부 거미", "regex": "과", "recipeKr": "고유 아이템 생성: 장갑", "harvest": false, "red": true}, {"en": "Fenumus, First of the Night", "kr": "밤의 최초, 페누무스", "regex": "밤의", "recipeKr": "아이템에 위상 스킬 부여: 거미의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 거미의 위상 스킬", "harvest": false, "red": true}, {"en": "Primal Crushclaw", "kr": "원시 박살발톱", "regex": "박살", "recipeKr": "아이템 생성: 귀중한 갑충석", "harvest": true, "red": true}, {"en": "Primal Cystcaller", "kr": "원시 낭종소환사", "regex": "낭", "recipeKr": "아이템 생성: 악몽 지도", "harvest": true, "red": true}, {"en": "Primal Rhex Matriarch", "kr": "원시 렉스 어미", "regex": "스 어", "recipeKr": "아이템 생성: 결합 고유 지도", "harvest": true, "red": true}, {"en": "Saqawal, First of the Sky", "kr": "하늘의 최초, 사카왈", "regex": "늘의", "recipeKr": "아이템에 위상 스킬 부여: 새의 위상 스킬<br>아이템에 위상 스킬 부여: 30레벨 새의 위상 스킬", "harvest": false, "red": true}, {"en": "Saqawine Blood Viper", "kr": "사카왈 피 독사", "regex": " 피", "recipeKr": "고유 아이템 생성: 검 또는 도끼<br>아이템 속성 부여 개조: 엘더 아이템에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Saqawine Chimeral", "kr": "사카왈 키메랄", "regex": "왈 키", "recipeKr": "화폐 아이템 생성: 무작위 화폐 10개 중첩", "harvest": false, "red": true}, {"en": "Saqawine Cobra", "kr": "사카왈 코브라", "regex": "왈 코", "recipeKr": "고유 아이템 생성: 철퇴 / 셉터<br>아이템 속성 부여 개조: 희귀 지도에 속성 부여 추가", "harvest": false, "red": true}, {"en": "Saqawine Retch", "kr": "사카왈 레치", "regex": "치", "recipeKr": "고유 아이템 생성: 장화", "harvest": false, "red": true}, {"en": "Saqawine Rhex", "kr": "사카왈 렉스", "regex": "왈 렉", "recipeKr": "포탈 열기: 사카왈의 보금자리", "harvest": false, "red": true}, {"en": "Saqawine Rhoa", "kr": "사카왈 로아", "regex": "왈 로", "recipeKr": "희귀 아이템 생성: 4연결 투구", "harvest": false, "red": true}, {"en": "Saqawine Vulture", "kr": "사카왈 시체매", "regex": "왈 시", "recipeKr": "아이템 생성: 6홈 희귀 (전체 연결)", "harvest": false, "red": true}, {"en": "Vivid Abberarach", "kr": "혈기 애버라라크", "regex": "버", "recipeKr": "아이템 생성: 쉐이퍼 수호자, 엘더 수호자 또는 정복자 지도", "harvest": true, "red": true}, {"en": "Vivid Vulture", "kr": "혈기 시체매", "regex": "기 시", "recipeKr": "아이템 1개 변화시킴: 고유 아이템의 결합 고정 속성 1개 무작위 변경", "harvest": true, "red": true}, {"en": "Vivid Watcher", "kr": "혈기 감시자", "regex": "기 감", "recipeKr": "특출난 보조 젬 희생: 고레벨, 고퀄리티 보조 젬 3개", "harvest": true, "red": true}, {"en": "Wild Brambleback", "kr": "야생 가시나무등", "regex": "등", "recipeKr": "아이템 1개 변화시킴: 특출난 보조 젬에 경험치 500m 추가", "harvest": true, "red": true}, {"en": "Wild Bristle Matron", "kr": "야생 털짐승 어미", "regex": "승", "recipeKr": "아이템 속성 부여 개조: 비-고유 아이템에 제작한 메타 속성 추가", "harvest": true, "red": true}, {"en": "Wild Hellion Alpha", "kr": "야생 헬리온 우두머리", "regex": "생 헬", "recipeKr": "아이템 속성 부여 개조: 감시자의 눈 속성 1개 무작위 변경", "harvest": true, "red": true}];
-const ECONOMY = "https://economy.poe.re";
-const LS_KEY = "beast-kr-settings";
-const $ = (id) => document.getElementById(id);
-const els = {min:$("min"), max:$("max"), harvest:$("harvest"), menagerie:$("menagerie"), redonly:$("redonly")};
-const defaults = {min:"", max:"", harvest:false, menagerie:false, redonly:false};
-
-let sorted = []; // META + prices, filtered and sorted by chaos desc
-
-function loadSettings(){
-  try{ return {...defaults, ...JSON.parse(localStorage.getItem(LS_KEY) || "{}")}; }
-  catch(e){ return {...defaults}; }
-}
-function saveSettings(s){ try{ localStorage.setItem(LS_KEY, JSON.stringify(s)); }catch(e){} }
-function applySettings(s){
-  els.min.value = s.min; els.max.value = s.max;
-  els.harvest.checked = s.harvest; els.menagerie.checked = s.menagerie; els.redonly.checked = s.redonly;
-}
-function readSettings(){
-  return {min:els.min.value.trim(), max:els.max.value.trim(),
-          harvest:els.harvest.checked, menagerie:els.menagerie.checked, redonly:els.redonly.checked};
-}
-
-function generateRegex(s){
-  const limit = s.menagerie ? 100 : 250;
-  const minV = s.min === "" ? 0 : Number(s.min);
-  const maxV = s.max === "" ? Infinity : Number(s.max);
-  let acc = "", done = false;
-  for(const b of sorted){
-    if(done) continue;
-    if(s.redonly && !b.red) continue;
-    if(!s.harvest && b.harvest) continue;
-    if(acc.length + b.regex.length + 1 > limit){ done = true; continue; }
-    if(b.chaos > maxV || b.chaos < minV) continue;
-    acc += "|" + b.regex;
-  }
-  return acc.substring(1);
-}
-
-function fmtChaos(v){ return v >= 100 ? Math.round(v).toLocaleString() : v.toLocaleString(); }
-
-function render(){
-  const s = readSettings();
-  saveSettings(s);
-  const result = generateRegex(s);
-  const limit = s.menagerie ? 100 : 250;
-  $("out").textContent = result;
-  const c = $("count");
-  c.textContent = result.length + "/" + limit;
-  c.classList.toggle("over", result.length > limit);
-
-  const parts = result === "" ? [] : result.split("|");
-  const rows = [];
-  for(const b of sorted){
-    if(s.redonly && !b.red) continue;
-    const included = parts.includes(b.regex);
-    const hiddenHarvest = !s.harvest && b.harvest;
-    const cls = included && !hiddenHarvest ? "inc" : (hiddenHarvest ? "dim" : "");
-    const tags = (b.red ? '<span class="tag red">붉은</span>' : '') +
-                 (b.harvest ? '<span class="tag harv">하베스트</span>' : '');
-    rows.push(`<tr class="${cls}">
-      <td class="name"><span class="kr-name">${b.kr}</span>${tags}<br><span class="en-name">${b.en}</span></td>
-      <td class="rgx">${b.regex}</td>
-      <td class="chaos">${fmtChaos(b.chaos)}</td>
-      <td class="recipe">${b.recipeKr}</td>
-    </tr>`);
-  }
-  $("rows").innerHTML = rows.join("");
-}
-
-function fmtKst(iso){
-  const d = new Date(iso);
-  if(isNaN(d)) return iso;
-  return d.toLocaleString("ko-KR", {timeZone:"Asia/Seoul", month:"long", day:"numeric", hour:"2-digit", minute:"2-digit"}) + " KST";
-}
-
-async function fetchJson(url){
-  const r = await fetch(url, {cache:"no-cache"});
-  if(!r.ok) throw new Error(url + " -> " + r.status);
-  return r.json();
-}
-
-async function loadPrices(){
-  let league = "Standard";
-  try{ league = (await fetchJson("data/league.json")).league; }catch(e){}
-  let eco = null, updated = "", source = "";
-  try{
-    eco = await fetchJson(`${ECONOMY}/beast/eco_${encodeURIComponent(league)}_Beast.json`);
-    try{ updated = (await fetch(`${ECONOMY}/generated.txt`, {cache:"no-cache"})).ok
-           ? await (await fetch(`${ECONOMY}/generated.txt`)).text() : ""; }catch(e){}
-    source = "실시간";
-  }catch(e){
-    try{
-      eco = await fetchJson("data/prices.json");
-      try{ updated = await (await fetch("data/updated.txt")).text(); }catch(e2){}
-      source = "저장된 스냅숏";
-    }catch(e2){}
-  }
-  if(!eco){
-    $("meta").textContent = "시세를 불러오지 못했습니다. 새로고침 해보세요.";
-    return;
-  }
-  const prices = new Map(eco.lines.map(l => [l.name, l]));
-  sorted = META.map(m => {
-    const p = prices.get(m.en);
-    return {...m, chaos: p ? p.chaosValue : 0, listings: p ? p.listingCount : 0};
-  }).filter(b => b.chaos > 0 && b.listings > 5)
-    .sort((a,b) => b.chaos - a.chaos);
-  $("meta").innerHTML = `<b>${league}</b> 리그 poe.ninja 시세(${source}) · 갱신 ${fmtKst(updated.trim())} · <a href="https://poe.re/beast">poe.re/beast</a>의 한국어판`;
-  render();
-}
-
-applySettings(loadSettings());
-for(const el of Object.values(els)){
-  el.addEventListener("input", render);
-  el.addEventListener("change", render);
-}
-$("copy").addEventListener("click", () => {
-  navigator.clipboard.writeText($("out").textContent).then(() => {
-    $("copied").classList.add("show");
-    setTimeout(() => $("copied").classList.remove("show"), 1400);
-  });
-});
-$("reset").addEventListener("click", () => { applySettings(defaults); render(); });
-loadPrices();
-</script>
 </body>
 </html>

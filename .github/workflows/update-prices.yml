@@ -1,4 +1,4 @@
-name: Update beast prices
+name: Update prices
 
 on:
   schedule:
@@ -24,13 +24,27 @@ jobs:
           picks=[l for l in ls if l not in ("Standard","Hardcore") and not l.startswith("Hardcore")]
           print(picks[0] if picks else "Standard")')
           echo "league=$league"
-          curl -sf "https://economy.poe.re/beast/eco_${league// /%20}_Beast.json" -o /tmp/eco.json
+          enc=${league// /%20}
+
+          # beast (lines: name/chaosValue/listingCount)
+          curl -sf "https://economy.poe.re/beast/eco_${enc}_Beast.json" -o /tmp/eco_Beast.json
+          # scarab/tattoo/runegraft (items+lines: id/primaryValue)
+          for cat in scarab tattoo runegraft; do
+            Cat=$(python3 -c "print('$cat'.capitalize())")
+            curl -sf "https://economy.poe.re/${cat}/eco_${enc}_${Cat}.json" -o /tmp/eco_${Cat}.json
+          done
+
           python3 - "$league" <<'PY'
           import json,sys
           league=sys.argv[1]
-          eco=json.load(open('/tmp/eco.json'))
+          eco=json.load(open('/tmp/eco_Beast.json'))
           slim={"lines":[{"name":l["name"],"chaosValue":l["chaosValue"],"listingCount":l["listingCount"]} for l in eco["lines"]]}
-          json.dump(slim,open('data/prices.json','w',encoding='utf-8'),ensure_ascii=False)
+          json.dump(slim,open('data/prices_Beast.json','w',encoding='utf-8'),ensure_ascii=False)
+          for cat in ("Scarab","Tattoo","Runegraft"):
+              d=json.load(open(f'/tmp/eco_{cat}.json'))
+              slim={"items":[{"id":i["id"],"name":i["name"]} for i in d["items"]],
+                    "lines":[{"id":l["id"],"primaryValue":l.get("primaryValue",0)} for l in d["lines"]]}
+              json.dump(slim,open(f'data/prices_{cat}.json','w',encoding='utf-8'),ensure_ascii=False)
           json.dump({"league":league},open('data/league.json','w'))
           PY
           curl -sf "https://economy.poe.re/generated.txt" -o data/updated.txt
@@ -40,5 +54,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/
-          git diff --cached --quiet || git commit -m "chore: update beast prices"
+          git diff --cached --quiet || git commit -m "chore: update prices"
           git push

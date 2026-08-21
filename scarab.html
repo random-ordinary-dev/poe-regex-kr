@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>갑충석 정규식</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="tabs">
+  <a href="index.html">홈</a>
+  <a href="beast.html">야수사냥</a>
+  <a href="scarab.html" class="on">갑충석</a>
+  <a href="tattoo.html">문신</a>
+  <a href="runegraft.html">룬 접목</a>
+</nav>
+  <header class="site">
+    <h1>갑충석 정규식</h1>
+    <span class="sub">보관함에서 값비싼 갑충석만 강조하는 검색어 생성기</span>
+  </header>
+  <p class="meta" id="meta">시세 불러오는 중…</p>
+
+  <div class="resultbox">
+    <div class="regex" id="out"></div>
+    <span class="count" id="count">0/250</span>
+    <span class="copied" id="copied">복사됨</span>
+    <button id="copy">복사</button>
+    <button class="ghost" id="reset">초기화</button>
+  </div>
+
+  <div class="panel">
+    <h2>설정</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="min">최소 카오스 가치</label>
+        <input id="min" type="text" inputmode="numeric" placeholder="예: 10">
+      </div>
+      <div class="field">
+        <label for="max">최대 카오스 가치</label>
+        <input id="max" type="text" inputmode="numeric" placeholder="비워두면 제한 없음">
+      </div>
+    </div>
+    <p class="hint">행을 클릭하면 가격과 무관하게 <b>포함</b> → <b>제외</b> → 자동 순으로 고정할 수 있습니다.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>이름</th><th>정규식</th><th class="num">카오스</th><th>효과</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    포함된 항목은 금색으로 표시됩니다. 생성된 정규식을 게임 내 보관함 검색창에 붙여넣으면 해당 아이템이 강조됩니다.<br>
+    갑충석·조각 탭처럼 갑충석 위주 탭에서 사용하는 것을 권장합니다(다른 아이템의 문구와 우연히 겹칠 수 있습니다).<br>
+    원본 도구: <a href="https://poe.re">poe.re</a> (veiset) · 시세: poe.ninja (economy.poe.re) · 한국어 명칭: 한국 서비스 클라이언트 데이터 · 효과 번역: <a href="https://poedb.tw/kr/">poedb.tw</a> 참조 · 한국어 클라이언트 기준
+  </footer>
+</div>
+
+<script>
+const DATA = [{"en": "Abyss Scarab of Descending", "kr": "하강의 심연 갑충석", "regex": "하강", "desc": "지역에 심연 지하 1개 추가 등장", "chaos": 1.11}, {"en": "Abyss Scarab of the Consort", "kr": "배우자의 심연 갑충석", "regex": "배우", "desc": "지역 내 심연 구덩이에서 심연의 배우자 1마리 생성", "chaos": 1.71}, {"en": "Ambush Scarab", "kr": "매복 갑충석", "regex": "매복 갑충석", "desc": "지역 내 금고 4개 추가", "chaos": 4.09}, {"en": "Ambush Scarab of Containment", "kr": "봉쇄의 매복 갑충석", "regex": "봉", "desc": "지역에 다수의 금고 추가\n지역 내 몬스터가 매복 중", "chaos": 134.4}, {"en": "Ambush Scarab of Discernment", "kr": "분별의 매복 갑충석", "regex": "별", "desc": "지역 내 금고가 보다 희귀한 종류일 확률이 높아짐", "chaos": 19.5}, {"en": "Ambush Scarab of Hidden Compartments", "kr": "비밀 공간의 매복 갑충석", "regex": "밀", "desc": "지역 내 금고를 15%의 확률로 다시 열 수 있음", "chaos": 1.46}, {"en": "Ambush Scarab of Potency", "kr": "잠재력의 매복 갑충석", "regex": "잠", "desc": "지역 내 금고의 비고정 속성 효과 75% 증가", "chaos": 1.58}, {"en": "Anarchy Scarab of Gigantification", "kr": "비대화의 혼란 갑충석", "regex": "대화", "desc": "지역 내 황야 탈주 유배자가 30%의 확률로 탈주 거인으로 등장", "chaos": 1.21}, {"en": "Anarchy Scarab of Partnership", "kr": "협력의 혼란 갑충석", "regex": "협", "desc": "지역 내 황야 탈주 유배자가 50%의 확률로 쌍으로 등장", "chaos": 1.18}, {"en": "Betrayal Scarab of Unbreaking", "kr": "원상 복구의 배신 갑충석", "regex": "구의", "desc": "지역에 있는 심문당한 불멸자 연합 대상이 50%의 확률로\n심문 완료 시 계급을 잃지 않음", "chaos": 1.71}, {"en": "Betrayal Scarab of the Allflame", "kr": "올플레임의 배신 갑충석", "regex": "올", "desc": "지역 내 올플레임 잉걸불이 교체하는 몬스터 무리의 수 75% 증가", "chaos": 1.31}, {"en": "Beyond Scarab", "kr": "이계 갑충석", "regex": "이계 갑충석", "desc": "지역에서 서로 가까이 있는 적을 처치하면 이계 몬스터를 불러옴", "chaos": 1.34}, {"en": "Beyond Scarab of Resurgence", "kr": "재기의 이계 갑충석", "regex": "재기", "desc": "지역 내에서 생성되는 이계 보스가 다른 진영의 이계 보스 대동\n지역 내 이계 보스가 떨어뜨리는 더럽혀진 화폐 20% 증가\n지역 내 이계 포탈이 고유 보스를 생성할 확률 30% 증가", "chaos": 1.1}, {"en": "Blight Scarab", "kr": "역병 갑충석", "regex": "역병 갑충석", "desc": "지역에 역병 인카운터 1개 등장", "chaos": 1.31}, {"en": "Blight Scarab of Invigoration", "kr": "고무의 역병 갑충석", "regex": "고무", "desc": "지역 내 강화의 탑이 각각 범위 내 역병 몬스터의\n난이도와 보상을 증가시킴", "chaos": 4.74}, {"en": "Blight Scarab of the Blightheart", "kr": "메마른 심장의 역병 갑충석", "regex": "른", "desc": "지역 내 역병 인카운터에 역병 걸린 상자 1개 등장\n지역 내 역병 인카운터에서 적 웨이브 추가로 생성\n역병 걸린 적을 많이 처치할수록 지역 내 역병 걸린 상자의\n크기가 커지고 보상이 늘어남", "chaos": 1.09}, {"en": "Breach Scarab of Instability", "kr": "불안정의 균열 갑충석", "regex": "불안", "desc": "지역에 불안정한 균열 2개 추가 등장", "chaos": 2.88}, {"en": "Breach Scarab of the Incensed Swarm", "kr": "분개한 무리의 균열 갑충석", "regex": "개한", "desc": "지역 내 아일리트의 스킬이 대신 벌레집을 격앙시켜, 이후 웨이브의 난이도와\n보상을 증가시킴", "chaos": 2.87}, {"en": "Breach Scarab of the Marshal", "kr": "총사령관의 균열 갑충석", "regex": "관", "desc": "지역 내 불안정한 균열에 보스 등장\n지역 내 벌레집이 벌레집 요새로 이어짐", "chaos": 1.58}, {"en": "Cartography Scarab of Escalation", "kr": "증대의 지도 제작 갑충석", "regex": "대의", "desc": "지역에 영향을 주는 지도 속성 하나당 지역에서 발견하는 지도 10% 증가", "chaos": 1.35}, {"en": "Abyss Scarab", "kr": "심연 갑충석", "regex": "심연 갑충석", "desc": "지역에 심연 1개 추가 등장", "chaos": 4.94}, {"en": "Abyss Scarab of Crystals", "kr": "수정의 심연 갑충석", "regex": "수정", "desc": "보상을 제공하지 않는 지역 내 심연 구덩이가 그 대신 심연 수정 생성", "chaos": 1.43}, {"en": "Abyss Scarab of Multitudes", "kr": "군중의 심연 갑충석", "regex": "중의 심", "desc": "먹은 영혼 하나당 지역 내 심연 절벽길에서 생성되는 몬스터 100% 증가", "chaos": 3.36}, {"en": "Anarchy Scarab", "kr": "혼란 갑충석", "regex": "혼란 갑충석", "desc": "지역에 탈주 유배자 5명 추가 등장", "chaos": 1.35}, {"en": "Anarchy Scarab of the Exceptional", "kr": "특출난 자의 혼란 갑충석", "regex": "난", "desc": "지역에 특출난 탈주 유배자 1명 추가 등장", "chaos": 1.14}, {"en": "Bestiary Scarab", "kr": "야수 도감 갑충석", "regex": "야수 도감 갑충석", "desc": "지역에 아인하르 등장", "chaos": 1.35}, {"en": "Bestiary Scarab of Duplicating", "kr": "복제의 야수 도감 갑충석", "regex": "제의 야", "desc": "지역 내에서 포획하는 야수의 복제본 생성", "chaos": 21.08}, {"en": "Bestiary Scarab of the Herd", "kr": "떼의 야수 도감 갑충석", "regex": "떼", "desc": "아인하르가 등장하는 지역에 붉은 야수 5마리 추가 등장", "chaos": 12.71}, {"en": "Betrayal Scarab", "kr": "배신 갑충석", "regex": "배신 갑충석", "desc": "지역에 준 등장", "chaos": 1.36}, {"en": "Betrayal Scarab of Reinforcements", "kr": "보강의 배신 갑충석", "regex": "보강", "desc": "지역 내 불멸자 연합 단원이 지원군을 동반할 확률 50% 증가", "chaos": 1.36}, {"en": "Beyond Scarab of Haemophilia", "kr": "혈우병의 이계 갑충석", "regex": "병의", "desc": "지역 내 이계 포탈의 병합 범위 50% 증가\n지역 내에서 이계 희귀 몬스터를 처치하는 캐릭터들이 30% 확률로 20초 동안 몬스터의 속성을 획득함", "chaos": 1.28}, {"en": "Beyond Scarab of the Invasion", "kr": "침략의 이계 갑충석", "regex": "략의 이", "desc": "지역 내 희귀 및 고유 몬스터 처치 시 이계 포탈 8~12개 추가 생성", "chaos": 1.17}, {"en": "Blight Scarab of Blooming", "kr": "개화의 역병 갑충석", "regex": "개화", "desc": "지역 내 역병 인카운터에서 고유 보스 최대 3마리 추가 등장\n역병 인카운터 내 고유 적의 생명력 100% 증가\n지역에서 발견하는 14등급 이상의 역병 걸린 지도가 역병에 유린당한 지도로 등장", "chaos": 13.92}, {"en": "Breach Scarab of the Hive", "kr": "벌레집의 균열 갑충석", "regex": "레집", "desc": "지역에 균열 벌레집 1개 등장", "chaos": 1.34}, {"en": "Breach Scarab of Resonant Cascade", "kr": "공명하는 폭포의 균열 갑충석", "regex": "공명", "desc": "이미 열린 불안정한 균열 하나당 지역 내 불안정한 균열이 10% 더 빠름\n이미 열린 불안정한 균열의 수에 따라 지역 내 불안정한 균열 몬스터의\n난이도와 보상 증가", "chaos": 24.1}, {"en": "Cartography Scarab of Corruption", "kr": "타락의 지도 제작 갑충석", "regex": "락", "desc": "지역에서 발견하는 비-고유 지도가 속성 8개가 부여된 타락한 지도로 떨어짐", "chaos": 10.46}, {"en": "Cartography Scarab of Risk", "kr": "위험의 지도 제작 갑충석", "regex": "위", "desc": "지역에 무작위 속성 2개 추가", "chaos": 214.5}, {"en": "Cartography Scarab of the Multitude", "kr": "군중의 지도 제작 갑충석", "regex": "중의 지", "desc": "지역에 난이도와 보상이 높은 몬스터로\n이루어진 무리가 8~12개 등장합니다. 이러한 몬스터는 떨어뜨리는 지도 수량이 300% 증가합니다.", "chaos": 1.66}, {"en": "Delirium Scarab of Delusions", "kr": "망상의 환영 갑충석", "regex": "망", "desc": "지역에서 발견하는 지도에 환영 현상 등장", "chaos": 1.1}, {"en": "Delirium Scarab of Paranoia", "kr": "편집증의 환영 갑충석", "regex": "편", "desc": "지역 내 환영 인카운터가 보상 유형 2개 추가 생성", "chaos": 17.99}, {"en": "Divination Scarab of The Cloister", "kr": "회랑의 점술 갑충석", "regex": "랑", "desc": "지역에 도이드리의 헌신자 무리 8~12개가 추가로 등장\n도이드리의 헌신자가 카드 묶음을 떨어뜨릴 확률 1% 추가", "chaos": 29.49}, {"en": "Domination Scarab", "kr": "지배 갑충석", "regex": "지배 갑충석", "desc": "지역에 성소 3개 추가 등장", "chaos": 1.71}, {"en": "Domination Scarab of Apparitions", "kr": "유령의 지배 갑충석", "regex": "령의", "desc": "지역에 유령 성소 2개 추가 등장", "chaos": 1.3}, {"en": "Essence Scarab", "kr": "에센스 갑충석", "regex": "에센스 갑충석", "desc": "지역에 갇힌 몬스터 3마리 추가 등장", "chaos": 2.31}, {"en": "Essence Scarab of Adaptation", "kr": "적응의 에센스 갑충석", "regex": "응", "desc": "지역 내 갇힌 몬스터가 풀려나면 지역 내 다른 갇힌 몬스터에게 무작위 에센스 속성 부여\n에센스 속성의 수에 따라 지역 내 갇힌 몬스터의\n난이도와 보상 증가", "chaos": 3.15}, {"en": "Essence Scarab of Ascent", "kr": "상승의 에센스 갑충석", "regex": "승", "desc": "지역에서 발견하는 에센스가 1등급 높게 발견됨", "chaos": 2.16}, {"en": "Expedition Scarab", "kr": "탐험 갑충석", "regex": "탐험 갑충석", "desc": "지역에 탐험 인카운터 1개 등장", "chaos": 1.31}, {"en": "Expedition Scarab of Archaeology", "kr": "고고학의 탐험 갑충석", "regex": "학", "desc": "지역 내 탐험 인카운터의 유적에 접미어 및 접두어 2개 추가", "chaos": 1.15}, {"en": "Harvest Scarab", "kr": "수확 갑충석", "regex": "수확 갑충석", "desc": "지역에 신성한 숲 등장", "chaos": 1.32}, {"en": "Harvest Scarab of Doubling", "kr": "복제의 수확 갑충석", "regex": "제의 수", "desc": "지역 내 수확 몬스터가 떨어뜨리는 생기가 복제됨\n지역 내 수확 몬스터의 생명력 100% 증폭", "chaos": 62.18}, {"en": "Horned Scarab of Awakening", "kr": "각성의 뿔 달린 갑충석", "regex": "각", "desc": "16등급 이상 지역에 무작위 메이븐 초대의 보스 등장", "chaos": 89.99}, {"en": "Horned Scarab of Bloodlines", "kr": "혈맹의 뿔 달린 갑충석", "regex": "혈맹", "desc": "지역의 마법 몬스터 150% 증가\n지역 내 마법 몬스터가 속성 1개를 추가로 보유", "chaos": 262.5}, {"en": "Horned Scarab of Glittering", "kr": "번쩍임의 뿔 달린 갑충석", "regex": "번", "desc": "지역 내 플레이어가 처치한 몬스터 수에 따라 아이템 희귀도가 최대 400%까지\n증가하고 시간이 지나면서 서서히 감소", "chaos": 3.07}, {"en": "Horned Scarab of Nemeses", "kr": "천벌의 뿔 달린 갑충석", "regex": "천", "desc": "지역 내 희귀 몬스터가 속성 2개 추가 보유", "chaos": 17.5}, {"en": "Horned Scarab of Pandemonium", "kr": "혼란 유발의 뿔 달린 갑충석", "regex": "발", "desc": "지역 내 몬스터 무리가 15% 확률로 무작위 아틀라스 보스 1마리로 등장\n마지막 지도 보스에 대한 속성이 해당 아틀라스 보스에도 적용", "chaos": 445.7}, {"en": "Horned Scarab of Preservation", "kr": "보전의 뿔 달린 갑충석", "regex": "보전", "desc": "다른 갑충석들이 사용해도 소모되지 않음", "chaos": 184.7}, {"en": "Incursion Scarab", "kr": "기습 갑충석", "regex": "기습 갑충석", "desc": "지역에 알바 등장", "chaos": 1.35}, {"en": "Incursion Scarab of Champions", "kr": "용사의 기습 갑충석", "regex": "용", "desc": "35%의 확률로 지역 내 기습의 모든 몬스터가 마법 이상으로 등장\n지역 내 기습의 무리 규모 15% 증가", "chaos": 1.19}, {"en": "Influencing Scarab of Hordes", "kr": "군단의 영향력 갑충석", "regex": "단의", "desc": "지역 내 영향을 받은 몬스터 무리의 무리 규모 40% 증가", "chaos": 1.57}, {"en": "Influencing Scarab of the Elder", "kr": "엘더의 영향력 갑충석", "regex": "더", "desc": "지역에 엘더 영향력 결과물 추가", "chaos": 1.33}, {"en": "Influencing Scarab of the Shaper", "kr": "쉐이퍼의 영향력 갑충석", "regex": "쉐", "desc": "지역에 쉐이퍼 영향력 결과물 추가", "chaos": 1.33}, {"en": "Kalguuran Scarab", "kr": "칼구르 갑충석", "regex": "칼구르 갑충석", "desc": "지역에 광맥 2개 추가 등장", "chaos": 1.69}, {"en": "Kalguuran Scarab of Enriching", "kr": "윤택의 칼구르 갑충석", "regex": "윤", "desc": "지역 내에서 완료하는 광맥 하나당\n광맥을 지키는 몬스터의 난이도와 보상이 증가하고\n광맥에 포함된 광석 15% 증가", "chaos": 1.49}, {"en": "Kalguuran Scarab of Guarded Riches", "kr": "보호받는 재물의 칼구르 갑충석", "regex": "받", "desc": "지역 내 광맥을 방어하는 몬스터가 마법 이상으로 등장", "chaos": 1.29}, {"en": "Legion Scarab of Treasures", "kr": "보물의 군단 갑충석", "regex": "물의 군", "desc": "지역 내 군단 상자가 상자 개방 시에 정체 상태에서 해방되는\n군단 몬스터에게 20% 확률로 보상을 확산시킴\n보상을 획득한 군단 몬스터는 난이도 증가", "chaos": 3.85}, {"en": "Legion Scarab of Officers", "kr": "장교의 군단 갑충석", "regex": "교", "desc": "지역 내 군단 진영에 병장 5명 추가 등장", "chaos": 2.0}, {"en": "Ritual Scarab of Abundance", "kr": "풍부함의 의식 갑충석", "regex": "함의 의", "desc": "지역 내 의식으로 얻는 헌정품 100% 증가", "chaos": 8.74}, {"en": "Ritual Scarab of Corpses", "kr": "시신의 의식 갑충석", "regex": "시신", "desc": "지역 내 의식에 희귀 아이템화된 시신 몬스터 1마리 추가 등장", "chaos": 1.16}, {"en": "Ritual Scarab of Wisps", "kr": "도깨비불의 의식 갑충석", "regex": "불의 의", "desc": "지역 내 의식 제단이 야생림 도깨비불 생성\n야생림 도깨비불이 주변의 플레이어들에게 공물 점수 획득량 100% 증가 부여", "chaos": 1.31}, {"en": "Scarab of Divinity", "kr": "신성의 갑충석", "regex": "신성", "desc": "지역 내 판테온의 손길에 닿은 희귀 몬스터 최대 3마리 추가\n판테온의 손길에 닿은 몬스터가 생성하는 유령이 주는 피해 100% 증가", "chaos": 1.29}, {"en": "Scarab of Monstrous Lineage", "kr": "기괴한 혈통의 갑충석", "regex": "괴", "desc": "마법 무리 규모 40% 증가", "chaos": 4.66}, {"en": "Scarab of Wisps", "kr": "도깨비불의 갑충석", "regex": "불의 갑", "desc": "지역 내 몬스터가 일정 확률로 야생림 도깨비불 2000마리로 강화", "chaos": 16.0}, {"en": "Sulphite Scarab", "kr": "아황산염 갑충석", "regex": "아황산염 갑충석", "desc": "지역에 니코 등장", "chaos": 1.38}, {"en": "Sulphite Scarab of Fumes", "kr": "연기의 아황산염 갑충석", "regex": "연기", "desc": "지도 지역에서 발견하는 아황산염이 격앙시키는 연기 방출\n격앙시키는 연기의 영향을 받는 적은 아이템 수량 50% 증가\n지도 내 아황산염을 남동석 광산의 몬스터가 방어", "chaos": 1.08}, {"en": "Torment Scarab of Peculiarity", "kr": "기이함의 고통 갑충석", "regex": "기이", "desc": "지도 내 고통받는 혼백이 특이한 변화형으로 등장", "chaos": 1.16}, {"en": "Trarthan Scarab", "kr": "트라투스 갑충석", "regex": "트라투스 갑충석", "desc": "지역에 용병 서식", "chaos": 1.34}, {"en": "Trarthan Scarab of Renown", "kr": "명성의 트라투스 갑충석", "regex": "명성", "desc": "지역에서 발견하는 용병이 가진 모든 장비 아이템이 고유 아이템임", "chaos": 17.22}, {"en": "Ultimatum Scarab of Catalysing", "kr": "기폭의 결전 갑충석", "regex": "기폭", "desc": "지역 내 결전 인카운터에서 지도 소유자가\n보상으로 기폭제만 획득 가능", "chaos": 226.9}, {"en": "Ultimatum Scarab of Inscription", "kr": "새김의 결전 갑충석", "regex": "김", "desc": "기폭제를 주는 지역 내 결전 인카운터 보상이\n지도 소유자에게 기폭제가 아닌 새겨진 결전을 줌", "chaos": 1.85}, {"en": "Delirium Scarab", "kr": "환영 갑충석", "regex": "환영 갑충석", "desc": "지역에 환영의 거울 1개 등장", "chaos": 1.29}, {"en": "Delirium Scarab of Mania", "kr": "광증의 환영 갑충석", "regex": "광", "desc": "지역에서 환영 보상 막대가 100% 빨리 채워짐\n지역 내 환영이 거울과의 거리에 비례해 50% 더 빠르게 증가", "chaos": 1.65}, {"en": "Delirium Scarab of Neuroses", "kr": "신경증의 환영 갑충석", "regex": "경", "desc": "지역 내 환영 인카운터에서 모든 고유 환영 보스 등장\n지역 내 환영 보상 유형이 고유 환영 보스 처치 시 +1 획득\n11등급 이상의 지도에만 사용 가능", "chaos": 2.8}, {"en": "Divination Scarab of Pilfering", "kr": "훔쳐냄의 점술 갑충석", "regex": "냄", "desc": "지역에서 발견하는 점술 카드를 지도의 마지막 보스가 강탈\n지도의 해당 마지막 보스가 강탈한 점술 카드가 많을수록\n난이도가 높아지고 마지막 보스가 주는 피해 증가\n지도의 해당 마지막 보스 처치 시 강탈한 모든 점술 카드 복제", "chaos": 45.84}, {"en": "Divination Scarab of Plenty", "kr": "풍부함의 점술 갑충석", "regex": "함의 점", "desc": "지역 내 점술 카드를 떨어뜨릴 확률이 1000% 증가한\n점술에 닿은 마법 몬스터 무리 6~10개 추가 등장", "chaos": 14.11}, {"en": "Domination Scarab of Evolution", "kr": "진화의 지배 갑충석", "regex": "화의 지", "desc": "지역에 진화의 성소 1개 추가 등장", "chaos": 1.09}, {"en": "Domination Scarab of Terrors", "kr": "공포의 지배 갑충석", "regex": "공포", "desc": "지역 내 성소를 1마리의 아틀라스 보스가 방어\n지도의 마지막 보스에 대한 속성이 이 아틀라스 보스에도 적용", "chaos": 55.16}, {"en": "Essence Scarab of Calcification", "kr": "석회화의 에센스 갑충석", "regex": "석회", "desc": "지역 내 자연적으로 서식하는 희귀 몬스터가 에센스에 갇힘", "chaos": 47.51}, {"en": "Essence Scarab of Stability", "kr": "안정의 에센스 갑충석", "regex": "정의 에", "desc": "지역 내에서 에센스 타락 시 에센스를 업그레이드 또는\n변화시키는 결과만 가능", "chaos": 1.36}, {"en": "Expedition Scarab of Runefinding", "kr": "룬 탐색의 탐험 갑충석", "regex": "룬", "desc": "지역 내 탐험 인카운터의 룬 몬스터\n표시물 수량 100% 증가", "chaos": 1.07}, {"en": "Expedition Scarab of Infusion", "kr": "주입의 탐험 갑충석", "regex": "입", "desc": "지역에서 발견하는 일지가 항상 고정 속성 4개 보유\n폭파한 유적의 수에 따라 탐험 몬스터의 난이도 및 보상 증가", "chaos": 1.08}, {"en": "Expedition Scarab of Verisium Powder", "kr": "베리시움 화약의 탐험 갑충석", "regex": "베", "desc": "지역 내 탐험 인카운터의 폭발물 수량 50% 증가\n폭발물 반경 80 증가", "chaos": 1.15}, {"en": "Harvest Scarab of Cornucopia", "kr": "풍요의 뿔의 수확 갑충석", "regex": "요", "desc": "지역에 신성한 숲이 등장할 시, 가능할 경우 신성한 숲에 각 유형의 4등급 씨앗 최대 1개씩 추가", "chaos": 108.6}, {"en": "Horned Scarab of Tradition", "kr": "전통의 뿔 달린 갑충석", "regex": "전통", "desc": "지역 내 모든 희귀 및 고유 몬스터가 떨어뜨리는 아이템이\n보상 속성에 의해 변화됨", "chaos": 5.22}, {"en": "Incursion Scarab of Invasion", "kr": "침략의 기습 갑충석", "regex": "략의 기", "desc": "지역에 기습 몬스터 무리 12~16개 추가 등장", "chaos": 1.25}, {"en": "Incursion Scarab of Timelines", "kr": "시간선의 기습 갑충석", "regex": "간선", "desc": "지역에서 처치하는 최종 건축가가 아이템화된 사원을 떨어뜨림\n지역에서 떨어지는 아이템화된 사원이 현재 사원 구조에 기반해 생성되지만, 방의 등급은 무작위 변경", "chaos": 48.19}, {"en": "Influencing Scarab of Interference", "kr": "방해의 영향력 갑충석", "regex": "방", "desc": "지도 보스가 무작위 쉐이퍼 수호자, 엘더 수호자, 정복자 또는 결합 보스 대동\n14등급 이상의 지도에만 사용 가능", "chaos": 1.61}, {"en": "Kalguuran Scarab of Refinement", "kr": "정제의 칼구르 갑충석", "regex": "정제", "desc": "지역 내 광맥이 광석 채광을 지시하는 대신 제련한 주괴 부여", "chaos": 54.99}, {"en": "Legion Scarab", "kr": "군단 갑충석", "regex": "군단 갑충석", "desc": "지역에 추가 군단 인카운터 등장", "chaos": 2.15}, {"en": "Legion Scarab of Eternal Conflict", "kr": "영원한 분쟁의 군단 갑충석", "regex": "쟁", "desc": "지역 내 군단 몬스터를 여러 번 깨울 수 있음\n지역 내 군단 몬스터를 깨울 때마다 난이도와 보상 증가", "chaos": 151.5}, {"en": "Ritual Scarab of Selectiveness", "kr": "선택의 의식 갑충석", "regex": "선택", "desc": "지역 내 의식 제단에서 헌정품을 무작위 변경할 때 첫 2회는 비용 없음\n지역 내 의식 제단에서 헌정품을 2회 추가로 무작위 변경 가능", "chaos": 1.46}, {"en": "Scarab of Adversaries", "kr": "적수의 갑충석", "regex": "적수", "desc": "지역에 복제된 희귀 몬스터를 포함한 무리 4개 추가 등장", "chaos": 1.41}, {"en": "Scarab of Radiant Storms", "kr": "찬란한 폭풍의 갑충석", "regex": "찬", "desc": "지역에 찬연한 폭풍 등장", "chaos": 1.15}, {"en": "Scarab of Stability", "kr": "안정의 갑충석", "regex": "정의 갑", "desc": "지역으로 이어지는 포탈이 50%의 확률로 사용해도 소모되지 않음", "chaos": 1.2}, {"en": "Scarab of the Dextral", "kr": "우측의 갑충석", "regex": "우측", "desc": "지역 접미어 속성의 효과 100% 증가\n지역 접두어 속성의 효과가 적용되지 않음", "chaos": 2.09}, {"en": "Scarab of the Sinistral", "kr": "좌측의 갑충석", "regex": "좌", "desc": "지역 접두어 속성의 효과 100% 증가\n지역 접미어 속성의 효과가 적용되지 않음", "chaos": 2.06}, {"en": "Titanic Scarab", "kr": "거대한 갑충석", "regex": "거대한 갑충석", "desc": "지역 무리 규모 증가 1%당 고유 몬스터의 강인함, 피해, 떨어뜨리는 아이템의 희귀도 및 수량 1% 증가", "chaos": 1.34}, {"en": "Titanic Scarab of Legend", "kr": "전설의 거대한 갑충석", "regex": "설", "desc": "지역 내 고유 몬스터가 몬스터 속성 4개 추가 보유", "chaos": 1.44}, {"en": "Titanic Scarab of Treasures", "kr": "보물의 거대한 갑충석", "regex": "물의 거", "desc": "지역 내 고유 몬스터가 보상 1개 추가 보유\n지역 내 고유 몬스터의 강인함 30% 증가", "chaos": 1.3}, {"en": "Torment Scarab", "kr": "고통 갑충석", "regex": "고통 갑충석", "desc": "지역에 고통받는 혼백 4마리 추가 등장\n사로잡힌 몬스터 처치 시 지역 내\n고통받는 혼백이 10%의 확률로 해방되고\n 사로잡힌 몬스터 1마리를 파냄", "chaos": 1.34}, {"en": "Torment Scarab of Possession", "kr": "사로잡힘의 고통 갑충석", "regex": "로", "desc": "지역 내 희귀 몬스터가 1/4 확률로 최대 3마리의 고통받는 혼백에게 사로잡힘", "chaos": 1.13}, {"en": "Trarthan Scarab of Infamy", "kr": "악명의 트라투스 갑충석", "regex": "악", "desc": "지역에서 발견하는 용병이 악명 높은 용병\n지역에서 발견하는 용병이 황야 용병 두 명과 동행함", "chaos": 21.87}, {"en": "Trarthan Scarab of Surprising Alliances", "kr": "의외의 동맹의 트라투스 갑충석", "regex": "동", "desc": "지역 내 황야 탈주 유배자가 50% 확률로 황야 용병과 동행함\n지역 내 황야 용병의 수에 따라 황야 용병의 난이도 증가", "chaos": 47.35}, {"en": "Ultimatum Scarab", "kr": "결전 갑충석", "regex": "결전 갑충석", "desc": "지역에 결전 인카운터 1개 등장", "chaos": 1.35}, {"en": "Ultimatum Scarab of Bribing", "kr": "매수의 결전 갑충석", "regex": "매수", "desc": "결전 몬스터가 주는 경험치 150% 증가\n결전 인카운터가 라운드 2개를 추가로 완료한 것처럼 보상을 줌", "chaos": 1.52}, {"en": "Ultimatum Scarab of Dueling", "kr": "결투의 결전 갑충석", "regex": "결투", "desc": "가능할 경우 지역 내 결전 인카운터가 항상 고유 보스로 이어짐", "chaos": 8.9}];
+const CAT = "Scarab";
+const ECONOMY = "https://economy.poe.re";
+const LS_KEY = "poekr-scarab";
+const $ = (id) => document.getElementById(id);
+const defaults = {min:"10", max:"", manual:{}};
+let st = loadSettings();
+let items = [];
+
+function loadSettings(){
+  try{ return {...defaults, ...JSON.parse(localStorage.getItem(LS_KEY) || "{}")}; }
+  catch(e){ return {...defaults}; }
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(st)); }catch(e){} }
+
+function generate(){
+  const minV = st.min === "" ? 0 : Number(st.min);
+  const maxV = st.max === "" ? Infinity : Number(st.max);
+  const pinned = items.filter(b => st.manual[b.en] === "in");
+  const auto = items.filter(b => st.manual[b.en] === undefined && b.chaos >= minV && b.chaos <= maxV && b.chaos > 0);
+  let acc = "", done = false;
+  for(const b of pinned.concat(auto)){
+    if(done) continue;
+    if(acc.length + b.regex.length + 1 > 250){ done = true; continue; }
+    acc += "|" + b.regex;
+  }
+  return acc.substring(1);
+}
+
+function fmtChaos(v){ return v >= 100 ? Math.round(v).toLocaleString() : v.toLocaleString(); }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function render(){
+  save();
+  const result = generate();
+  $("out").textContent = result;
+  const c = $("count");
+  c.textContent = result.length + "/250";
+  c.classList.toggle("over", result.length > 250);
+  const parts = result === "" ? [] : result.split("|");
+  $("rows").innerHTML = items.map((b,i) => {
+    const m = st.manual[b.en];
+    const included = parts.includes(b.regex);
+    const cls = (included ? "inc" : "") + (m === "out" ? " dim" : "") + " click";
+    const tag = m === "in" ? '<span class="tag pin">포함 고정</span>' : m === "out" ? '<span class="tag ban">제외</span>' : "";
+    return `<tr class="${cls}" data-i="${i}">
+      <td class="name"><span class="kr-name">${esc(b.kr)}</span>${tag}<br><span class="en-name">${esc(b.en)}</span></td>
+      <td class="rgx">${esc(b.regex)}</td>
+      <td class="chaos">${b.chaos > 0 ? fmtChaos(b.chaos) : "—"}</td>
+      <td class="recipe">${esc(b.desc)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function fmtKst(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString("ko-KR", {timeZone:"Asia/Seoul", month:"long", day:"numeric", hour:"2-digit", minute:"2-digit"}) + " KST";
+}
+async function fetchJson(url){
+  const r = await fetch(url, {cache:"no-cache"});
+  if(!r.ok) throw new Error(url + " -> " + r.status);
+  return r.json();
+}
+
+async function load(){
+  let league = "Standard";
+  try{ league = (await fetchJson("data/league.json")).league; }catch(e){}
+  let eco = null, updated = "", source = "";
+  try{
+    eco = await fetchJson(`${ECONOMY}/scarab/eco_${encodeURIComponent(league)}_Scarab.json`);
+    try{ const r = await fetch(`${ECONOMY}/generated.txt`, {cache:"no-cache"}); if(r.ok) updated = await r.text(); }catch(e){}
+    source = "실시간";
+  }catch(e){
+    try{
+      eco = await fetchJson("data/prices_Scarab.json");
+      try{ updated = await (await fetch("data/updated.txt")).text(); }catch(e2){}
+      source = "저장된 스냅숏";
+    }catch(e2){}
+  }
+  if(eco){
+    const byId = new Map(eco.items.map(it => [it.id, it.name]));
+    const price = new Map();
+    for(const l of eco.lines){ const n = byId.get(l.id); if(n) price.set(n, l.primaryValue ?? 0); }
+    items = DATA.map(d => ({...d, chaos: price.get(d.en) ?? d.chaos ?? 0}));
+    $("meta").innerHTML = `<b>${esc(league)}</b> 리그 poe.ninja 시세(${source}) · 갱신 ${esc(fmtKst(updated.trim()))} · <a href="https://poe.re">poe.re</a>의 한국어판`;
+  }else{
+    items = DATA.slice();
+    $("meta").textContent = "시세를 불러오지 못해 내장 스냅숏으로 표시합니다.";
+  }
+  items.sort((a,b) => b.chaos - a.chaos);
+  render();
+}
+
+$("min").value = st.min; $("max").value = st.max;
+$("min").addEventListener("input", e => { st.min = e.target.value.trim(); render(); });
+$("max").addEventListener("input", e => { st.max = e.target.value.trim(); render(); });
+$("rows").addEventListener("click", e => {
+  const tr = e.target.closest("tr[data-i]");
+  if(!tr) return;
+  const b = items[Number(tr.dataset.i)];
+  const cur = st.manual[b.en];
+  if(cur === undefined) st.manual[b.en] = "in";
+  else if(cur === "in") st.manual[b.en] = "out";
+  else delete st.manual[b.en];
+  render();
+});
+$("copy").addEventListener("click", () => {
+  navigator.clipboard.writeText($("out").textContent).then(() => {
+    $("copied").classList.add("show");
+    setTimeout(() => $("copied").classList.remove("show"), 1400);
+  });
+});
+$("reset").addEventListener("click", () => { st = {...defaults, manual:{}}; $("min").value = st.min; $("max").value = st.max; render(); });
+load();
+</script>
+</body>
+</html>

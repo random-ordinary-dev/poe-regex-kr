@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>룬 접목 정규식</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;700&family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="wrap">
+<nav class="tabs">
+  <a href="index.html">홈</a>
+  <a href="beast.html">야수사냥</a>
+  <a href="scarab.html">갑충석</a>
+  <a href="tattoo.html">문신</a>
+  <a href="runegraft.html" class="on">룬 접목</a>
+</nav>
+  <header class="site">
+    <h1>룬 접목 정규식</h1>
+    <span class="sub">칼구르 룬 접목 중 값비싼 것만 강조하는 검색어 생성기</span>
+  </header>
+  <p class="meta" id="meta">시세 불러오는 중…</p>
+
+  <div class="resultbox">
+    <div class="regex" id="out"></div>
+    <span class="count" id="count">0/250</span>
+    <span class="copied" id="copied">복사됨</span>
+    <button id="copy">복사</button>
+    <button class="ghost" id="reset">초기화</button>
+  </div>
+
+  <div class="panel">
+    <h2>설정</h2>
+    <div class="fields">
+      <div class="field">
+        <label for="min">최소 카오스 가치</label>
+        <input id="min" type="text" inputmode="numeric" placeholder="예: 10">
+      </div>
+      <div class="field">
+        <label for="max">최대 카오스 가치</label>
+        <input id="max" type="text" inputmode="numeric" placeholder="비워두면 제한 없음">
+      </div>
+    </div>
+    <p class="hint">행을 클릭하면 가격과 무관하게 <b>포함</b> → <b>제외</b> → 자동 순으로 고정할 수 있습니다.</p>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr><th>이름</th><th>정규식</th><th class="num">카오스</th><th>효과</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>
+    포함된 항목은 금색으로 표시됩니다. 생성된 정규식을 게임 내 보관함 검색창에 붙여넣으면 해당 아이템이 강조됩니다.<br>
+    룬 접목을 모아 둔 탭에서 사용하는 것을 권장합니다.<br>
+    원본 도구: <a href="https://poe.re">poe.re</a> (veiset) · 시세: poe.ninja (economy.poe.re) · 한국어 명칭: 한국 서비스 클라이언트 데이터 · 효과 번역: <a href="https://poedb.tw/kr/">poedb.tw</a> 참조 · 한국어 클라이언트 기준
+  </footer>
+</div>
+
+<script>
+const DATA = [{"en": "Runegraft of Blasphemy", "kr": "신성 모독의 룬 접목", "regex": "독", "desc": "명중 시 저주에 걸리지 않은 적이 30%의 확률로 무작위 사술 저주에 걸림", "chaos": 18.54}, {"en": "Runegraft of Consecration", "kr": "신성화의 룬 접목", "regex": "화", "desc": "플레이어가 생성하는 신성화 지대가 플레이어 및 동료들의마나 재생 속도 30% 증가", "chaos": 19.12}, {"en": "Runegraft of Gemcraft", "kr": "마석 제작의 룬 접목", "regex": "작", "desc": "특출난 젬이 아닌 모든 보조 젬 레벨 +1", "chaos": 38.78}, {"en": "Runegraft of Quaffing", "kr": "들이마심의 룬 접목", "regex": "들", "desc": "플라스크로 회복하는 마나 25% 감소 / 효과가 즉시 적용되지 않는 플라스크를 사용하여 마나 회복 시 생명력도 회복", "chaos": 19.62}, {"en": "Runegraft of Rallying", "kr": "재집결의 룬 접목", "regex": "집", "desc": "깃발 설치에 소모한 기백 5당 방어 상승 1 획득", "chaos": 16.11}, {"en": "Runegraft of Restitching", "kr": "재봉합의 룬 접목", "regex": "봉", "desc": "치명타로 받는 피해의 40%를 생명력으로 회생", "chaos": 18.65}, {"en": "Runegraft of Stability", "kr": "안정성의 룬 접목", "regex": "안", "desc": "행운 또는 불운 효과가 대신 평이로 적용", "chaos": 35.06}, {"en": "Runegraft of the Agile", "kr": "날렵한 자의 룬 접목", "regex": "날", "desc": "플레이어에게 적용되는 도피의 효과가 대신 처음 2초 동안 증가", "chaos": 19.43}, {"en": "Runegraft of the Combatant", "kr": "전투원의 룬 접목", "regex": "원", "desc": "플레이어보다 남은 생명력 백분율이 높은 적에게 주는 공격 피해 50% 증가", "chaos": 18.78}, {"en": "Runegraft of the Imbued", "kr": "힘을 부여받은 자의 룬 접목", "regex": "받", "desc": "플라스크의 영향을 받지 않는 동안 자신에게 적용된 팅크의 효과 30% 증가", "chaos": 19.16}, {"en": "Runegraft of the Jeweller", "kr": "보석상의 룬 접목", "regex": "보", "desc": "장착한 양손 무기의 연결되지 않은 홈 하나당 피해 10% 증가", "chaos": 18.63}, {"en": "Runegraft of the Novamark", "kr": "폭발징표의 룬 접목", "regex": "발", "desc": "폭발 주문이 가능한 경우 시전자 주변이 아닌 징표가 찍힌 대상에게 시전", "chaos": 19.58}, {"en": "Runegraft of the River", "kr": "강의 룬 접목", "regex": "강", "desc": "낮은 생명력 상태 도달 시 20% 확률로 최대 생명력으로 회복", "chaos": 18.84}, {"en": "Runegraft of the Sinistral", "kr": "좌측의 룬 접목", "regex": "좌", "desc": "보조 장비 공격 속도 10% 증폭", "chaos": 19.59}, {"en": "Runegraft of the Spellbound", "kr": "주문속박의 룬 접목", "regex": "문", "desc": "주문이 장착한 양손 무기 물리 피해의 30%와 동일한 추가 주문 피해 획득", "chaos": 17.03}, {"en": "Runegraft of the Witchmark", "kr": "마녀징표의 룬 접목", "regex": "녀", "desc": "주문이 생명력 최대치의 2%와 동일한 추가 카오스 피해를 줌 / 주문의 생명력 소모량 +8%", "chaos": 18.34}, {"en": "Runegraft of Time", "kr": "시간의 룬 접목", "regex": "간", "desc": "스킬 사용 시 20% 확률로 재사용 횟수를 소모하지 않음", "chaos": 12.04}, {"en": "Runegraft of Treachery", "kr": "배반의 룬 접목", "regex": "반", "desc": "스킬의 점유 효율 15% 증가 / 동료에게 영향을 주는 자신의 오라 스킬이 적에게도 영향을 줌", "chaos": 53.98}, {"en": "Runegraft of Bellows", "kr": "노호의 룬 접목", "regex": "노", "desc": "최근 4초 이내 함성을 사용하지 않은 경우 함성 속도 100% 증가", "chaos": 18.56}, {"en": "Runegraft of Connection", "kr": "연결의 룬 접목", "regex": "연", "desc": "연결 스킬의 범위 50% 증가", "chaos": 17.37}, {"en": "Runegraft of Fury", "kr": "광분의 룬 접목", "regex": "광", "desc": "생명력 플라스크 사용 시 격노 3 획득", "chaos": 22.53}, {"en": "Runegraft of Loyalty", "kr": "충성의 룬 접목", "regex": "충", "desc": "플레이어에게 유발되는 원소 상태 이상이 40% 확률로주변의 소환수에게 대신 유발", "chaos": 19.08}, {"en": "Runegraft of Refraction", "kr": "굴절의 룬 접목", "regex": "굴", "desc": "투사체를 최대 1개만 발사 / 투사체 갈라짐 / 투사체 연쇄 1회 추가", "chaos": 18.55}, {"en": "Runegraft of Resurgence", "kr": "재기의 룬 접목", "regex": "기", "desc": "비전 쇄도가 생명력 재생 속도 15% 증가 효과도 부여", "chaos": 18.53}, {"en": "Runegraft of Rotblood", "kr": "부식혈의 룬 접목", "regex": "식", "desc": "자신이 중독시킨 적이 주는 물리 피해의 10%를 카오스 피해로 전환", "chaos": 29.53}, {"en": "Runegraft of Suffering", "kr": "고통의 룬 접목", "regex": "고", "desc": "플레이어가 유발한 피해를 주는 상태 이상이 플레이어가 동일한 상태 이상의 영향을 받는 동안 주는 피해 50% 증가", "chaos": 19.58}, {"en": "Runegraft of the Angler", "kr": "낚시꾼의 룬 접목", "regex": "꾼", "desc": "낚싯대를 들고 있는 동안 모든 명중이 치명타", "chaos": 2562}, {"en": "Runegraft of the Bound", "kr": "속박의 룬 접목", "regex": "속박의 룬 접목", "desc": "장착 중인 장화로 받는 보너스 20% 감소 / 장착 중인 장갑으로 받는 보너스 20% 증가", "chaos": 18.42}, {"en": "Runegraft of the Fortress", "kr": "요새의 룬 접목", "regex": "새", "desc": "능력치 10% 감소 / 방어력 40% 증가", "chaos": 1172}, {"en": "Runegraft of the Soulwick", "kr": "영혼심지의 룬 접목", "regex": "영", "desc": "1초마다 1 바알 영혼 획득", "chaos": 21.23}, {"en": "Runegraft of the Warp", "kr": "왜곡의 룬 접목", "regex": "곡", "desc": "플레이어에게 적용되는 버프가 30% 더 느리게 만료됨 / 플레이어에게 적용되는 디버프가 30% 더 빠르게 만료됨", "chaos": 816.3}];
+const CAT = "Runegraft";
+const ECONOMY = "https://economy.poe.re";
+const LS_KEY = "poekr-runegraft";
+const $ = (id) => document.getElementById(id);
+const defaults = {min:"20", max:"", manual:{}};
+let st = loadSettings();
+let items = [];
+
+function loadSettings(){
+  try{ return {...defaults, ...JSON.parse(localStorage.getItem(LS_KEY) || "{}")}; }
+  catch(e){ return {...defaults}; }
+}
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(st)); }catch(e){} }
+
+function generate(){
+  const minV = st.min === "" ? 0 : Number(st.min);
+  const maxV = st.max === "" ? Infinity : Number(st.max);
+  const pinned = items.filter(b => st.manual[b.en] === "in");
+  const auto = items.filter(b => st.manual[b.en] === undefined && b.chaos >= minV && b.chaos <= maxV && b.chaos > 0);
+  let acc = "", done = false;
+  for(const b of pinned.concat(auto)){
+    if(done) continue;
+    if(acc.length + b.regex.length + 1 > 250){ done = true; continue; }
+    acc += "|" + b.regex;
+  }
+  return acc.substring(1);
+}
+
+function fmtChaos(v){ return v >= 100 ? Math.round(v).toLocaleString() : v.toLocaleString(); }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+function render(){
+  save();
+  const result = generate();
+  $("out").textContent = result;
+  const c = $("count");
+  c.textContent = result.length + "/250";
+  c.classList.toggle("over", result.length > 250);
+  const parts = result === "" ? [] : result.split("|");
+  $("rows").innerHTML = items.map((b,i) => {
+    const m = st.manual[b.en];
+    const included = parts.includes(b.regex);
+    const cls = (included ? "inc" : "") + (m === "out" ? " dim" : "") + " click";
+    const tag = m === "in" ? '<span class="tag pin">포함 고정</span>' : m === "out" ? '<span class="tag ban">제외</span>' : "";
+    return `<tr class="${cls}" data-i="${i}">
+      <td class="name"><span class="kr-name">${esc(b.kr)}</span>${tag}<br><span class="en-name">${esc(b.en)}</span></td>
+      <td class="rgx">${esc(b.regex)}</td>
+      <td class="chaos">${b.chaos > 0 ? fmtChaos(b.chaos) : "—"}</td>
+      <td class="recipe">${esc(b.desc)}</td>
+    </tr>`;
+  }).join("");
+}
+
+function fmtKst(iso){
+  const d = new Date(iso);
+  if(isNaN(d)) return iso;
+  return d.toLocaleString("ko-KR", {timeZone:"Asia/Seoul", month:"long", day:"numeric", hour:"2-digit", minute:"2-digit"}) + " KST";
+}
+async function fetchJson(url){
+  const r = await fetch(url, {cache:"no-cache"});
+  if(!r.ok) throw new Error(url + " -> " + r.status);
+  return r.json();
+}
+
+async function load(){
+  let league = "Standard";
+  try{ league = (await fetchJson("data/league.json")).league; }catch(e){}
+  let eco = null, updated = "", source = "";
+  try{
+    eco = await fetchJson(`${ECONOMY}/runegraft/eco_${encodeURIComponent(league)}_Runegraft.json`);
+    try{ const r = await fetch(`${ECONOMY}/generated.txt`, {cache:"no-cache"}); if(r.ok) updated = await r.text(); }catch(e){}
+    source = "실시간";
+  }catch(e){
+    try{
+      eco = await fetchJson("data/prices_Runegraft.json");
+      try{ updated = await (await fetch("data/updated.txt")).text(); }catch(e2){}
+      source = "저장된 스냅숏";
+    }catch(e2){}
+  }
+  if(eco){
+    const byId = new Map(eco.items.map(it => [it.id, it.name]));
+    const price = new Map();
+    for(const l of eco.lines){ const n = byId.get(l.id); if(n) price.set(n, l.primaryValue ?? 0); }
+    items = DATA.map(d => ({...d, chaos: price.get(d.en) ?? d.chaos ?? 0}));
+    $("meta").innerHTML = `<b>${esc(league)}</b> 리그 poe.ninja 시세(${source}) · 갱신 ${esc(fmtKst(updated.trim()))} · <a href="https://poe.re">poe.re</a>의 한국어판`;
+  }else{
+    items = DATA.slice();
+    $("meta").textContent = "시세를 불러오지 못해 내장 스냅숏으로 표시합니다.";
+  }
+  items.sort((a,b) => b.chaos - a.chaos);
+  render();
+}
+
+$("min").value = st.min; $("max").value = st.max;
+$("min").addEventListener("input", e => { st.min = e.target.value.trim(); render(); });
+$("max").addEventListener("input", e => { st.max = e.target.value.trim(); render(); });
+$("rows").addEventListener("click", e => {
+  const tr = e.target.closest("tr[data-i]");
+  if(!tr) return;
+  const b = items[Number(tr.dataset.i)];
+  const cur = st.manual[b.en];
+  if(cur === undefined) st.manual[b.en] = "in";
+  else if(cur === "in") st.manual[b.en] = "out";
+  else delete st.manual[b.en];
+  render();
+});
+$("copy").addEventListener("click", () => {
+  navigator.clipboard.writeText($("out").textContent).then(() => {
+    $("copied").classList.add("show");
+    setTimeout(() => $("copied").classList.remove("show"), 1400);
+  });
+});
+$("reset").addEventListener("click", () => { st = {...defaults, manual:{}}; $("min").value = st.min; $("max").value = st.max; render(); });
+load();
+</script>
+</body>
+</html>
