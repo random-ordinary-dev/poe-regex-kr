@@ -47,6 +47,19 @@ jobs:
               json.dump(slim,open(f'data/prices_{cat}.json','w',encoding='utf-8'),ensure_ascii=False)
           json.dump({"league":league},open('data/league.json','w'))
           PY
+          # expedition uniques (slim to gamble-relevant fields)
+          for t in Accessory Armour Jewel Weapon; do
+            curl -sf "https://economy.poe.re/expedition/eco_${enc}_Unique${t}.json" -o /tmp/eco_U${t}.json
+          done
+          python3 - <<'PY'
+          import json
+          out=[]
+          for t in ("Accessory","Armour","Jewel","Weapon"):
+              d=json.load(open(f'/tmp/eco_U{t}.json'))
+              for l in d["lines"]:
+                  out.append({"name":l["name"],"baseType":l.get("baseType",""),"chaosValue":l.get("chaosValue",0)})
+          json.dump({"lines":out},open('data/prices_Uniques.json','w',encoding='utf-8'),ensure_ascii=False)
+          PY
           curl -sf "https://economy.poe.re/generated.txt" -o data/updated.txt
 
       - name: Commit if changed
