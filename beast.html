@@ -97,23 +97,19 @@ function generateRegex(s){
   const limit = s.menagerie ? 100 : 250;
   const minV = s.min === "" ? 0 : Number(s.min);
   const maxV = s.max === "" ? Infinity : Number(s.max);
-  const pool = sorted.filter(b => !(s.redonly && !b.red) && !(!s.harvest && b.harvest) && !b.unsafe);
+  const pool = sorted.filter(b => !(s.redonly && !b.red) && !(!s.harvest && b.harvest) && !b.unsafe && !b.guards);
   const list = pool.filter(b => b.chaos >= minV && b.chaos <= maxV);
   const asc = maxV !== Infinity && minV === 0;
   list.sort((a,b) => asc ? a.chaos - b.chaos : b.chaos - a.chaos);
-  const inList = new Set(list.map(b => b.en));
-  const toks = [], negs = [];
-  let len = 2;
+  const toks = [];
+  let len = 0;
   for(const b of list){
-    const newNegs = (b.guards || []).filter(g => !inList.has(g.en) && !negs.includes(g.t));
-    const cost = b.regex.length + (toks.length ? 1 : 0) + newNegs.reduce((a,g) => a + g.t.length + 4, 0);
+    const cost = b.regex.length + (toks.length ? 1 : 0);
     if(len + cost > limit) break;
     toks.push(b.regex);
-    for(const g of newNegs) negs.push(g.t);
     len += cost;
   }
-  if(!toks.length) return "";
-  return '"' + toks.join("|") + '"' + negs.map(n => ' "!' + n + '"').join("");
+  return toks.join("|");
 }
 
 function fmtChaos(v){ return v >= 100 ? Math.round(v).toLocaleString() : v.toLocaleString(); }
@@ -128,8 +124,7 @@ function render(){
   c.textContent = result.length + "/" + limit;
   c.classList.toggle("over", result.length > limit);
 
-  const gm = result.match(/^"([^"]*)"/);
-  const parts = gm ? gm[1].split("|") : [];
+  const parts = result === "" ? [] : result.split("|");
   const rows = [];
   for(const b of sorted){
     if(s.redonly && !b.red) continue;
@@ -138,11 +133,10 @@ function render(){
     const cls = included && !hiddenHarvest ? "inc" : (hiddenHarvest ? "dim" : "");
     const tags = (b.red ? '<span class="tag red">붉은</span>' : '') +
                  (b.harvest ? '<span class="tag harv">수확</span>' : '') +
-                 (b.guards ? '<span class="tag harv" title="이름이 겹치는 야수를 !토큰으로 제외해 보호합니다">보호</span>' : '') +
-                 (b.unsafe ? '<span class="tag ban">⚠ 제외</span>' : '');
+                 ((b.unsafe || b.guards) ? '<span class="tag ban" title="이 이름을 포함하는 더 긴 이름의 야수가 있고, 야수 도감 검색창은 부정(!) 문법을 지원하지 않아 정규식에서 제외됩니다">⚠ 제외</span>' : '');
     rows.push(`<tr class="${cls}">
       <td class="name"><span class="kr-name">${b.kr}</span>${tags}<br><span class="en-name">${b.en}</span></td>
-      <td class="rgx">${b.unsafe ? "—" : b.regex}</td>
+      <td class="rgx">${(b.unsafe || b.guards) ? "—" : b.regex}</td>
       <td class="chaos">${fmtChaos(b.chaos)}</td>
       <td class="recipe">${b.recipeKr}</td>
     </tr>`);
